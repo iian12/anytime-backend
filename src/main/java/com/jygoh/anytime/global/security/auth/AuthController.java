@@ -9,6 +9,9 @@ import com.jygoh.anytime.domain.member.dto.GoogleUserDto;
 import com.jygoh.anytime.domain.member.dto.RegisterReqDto;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.domain.member.service.MemberService;
+import com.jygoh.anytime.global.security.jwt.TokenResponseDto;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
@@ -48,7 +51,7 @@ public class AuthController {
     }
 
     @PostMapping("/google/login")
-    public ResponseEntity<String> loginWithGoogle(@RequestBody String idToken) {
+    public ResponseEntity<String> loginWithGoogle(@RequestBody String idToken, HttpServletResponse response) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                 GoogleNetHttpTransport.newTrustedTransport(), JSON_FACTORY).setAudience(
@@ -60,12 +63,30 @@ public class AuthController {
                 String nickname = (String) payload.get("name");
                 String profileImageUrl = (String) payload.get("profileImageUrl");
                 String providerId = payload.getSubject();
+
                 GoogleUserDto userDto = new GoogleUserDto();
                 userDto.setEmail(email);
                 userDto.setNickname(nickname);
                 userDto.setProfileImageUrl(profileImageUrl);
                 userDto.setProviderId(providerId);
-                memberService.processingGoogleUser(userDto);
+
+                TokenResponseDto tokenResponseDto = memberService.processingGoogleUser(userDto);
+
+                Cookie accessTokenCookie = new Cookie("access_token", tokenResponseDto.getAccessToken());
+                accessTokenCookie.setHttpOnly(false);
+                accessTokenCookie.setSecure(false);
+                accessTokenCookie.setPath("/");
+                accessTokenCookie.setMaxAge(60 * 60 * 2);
+
+                Cookie refreshTokenCookie = new Cookie("refreshToken", tokenResponseDto.getRefreshToken());
+                refreshTokenCookie.setHttpOnly(false);
+                refreshTokenCookie.setSecure(false);
+                refreshTokenCookie.setPath("/");
+                refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60 * 2);
+
+                response.addCookie(accessTokenCookie);
+                response.addCookie(refreshTokenCookie);
+
                 return ResponseEntity.ok().build();
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
