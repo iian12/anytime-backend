@@ -4,6 +4,8 @@ import com.jygoh.anytime.domain.member.dto.GoogleUserDto;
 import com.jygoh.anytime.domain.member.dto.RegisterReqDto;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
+import com.jygoh.anytime.global.security.jwt.JwtTokenProvider;
+import com.jygoh.anytime.global.security.jwt.TokenResponseDto;
 import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,10 +17,13 @@ public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public MemberServiceImpl(MemberRepository memberRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public MemberServiceImpl(MemberRepository memberRepository,
+        BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider) {
         this.memberRepository = memberRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
 
@@ -44,21 +49,28 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Member processingGoogleUser(GoogleUserDto dto) {
+    public TokenResponseDto processingGoogleUser(GoogleUserDto dto) {
         Optional<Member> optionalMember = memberRepository.findByEmail(dto.getEmail());
-
         if (optionalMember.isPresent()) {
             Member existingMember = optionalMember.get();
             existingMember.updateProviderId(dto.getProviderId());
-            return memberRepository.save(existingMember);
+            memberRepository.save(existingMember);
+            String accessToken = jwtTokenProvider.createAccessToken(existingMember.getId());
+            String refreshToken = jwtTokenProvider.createRefreshToken(existingMember.getId());
+            TokenResponseDto tokenResponseDto = new TokenResponseDto();
+            tokenResponseDto.setAccessToken(accessToken);
+            tokenResponseDto.setRefreshToken(refreshToken);
+            return tokenResponseDto;
         } else {
-            Member newMember = Member.builder()
-                .email(dto.getEmail())
-                .nickname(dto.getNickname())
-                .profileImageUrl(dto.getProfileImageUrl())
-                .providerId(dto.getProviderId())
-                .build();
-            return memberRepository.save(newMember);
+            Member newMember = Member.builder().email(dto.getEmail()).nickname(dto.getNickname())
+                .profileImageUrl(dto.getProfileImageUrl()).providerId(dto.getProviderId()).build();
+            memberRepository.save(newMember);
+            String accessToken = jwtTokenProvider.createAccessToken(newMember.getId());
+            String refreshToken = jwtTokenProvider.createRefreshToken(newMember.getId());
+            TokenResponseDto tokenResponseDto = new TokenResponseDto();
+            tokenResponseDto.setAccessToken(accessToken);
+            tokenResponseDto.setRefreshToken(refreshToken);
+            return tokenResponseDto;
         }
     }
 }
