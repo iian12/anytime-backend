@@ -2,6 +2,7 @@ package com.jygoh.anytime.global.security.jwt;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
 
 public class TokenUtils {
 
@@ -9,16 +10,21 @@ public class TokenUtils {
     }
 
     public static String extractTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+
+        // Check for token in cookies
         Cookie[] cookies = request.getCookies();
-        // 쿠키가 존재하는지 확인
         if (cookies != null) {
-            // 모든 쿠키를 순회하면서 accessToken 쿠키를 찾음
             for (Cookie cookie : cookies) {
-                if ("accessToken".equals(cookie.getName())) {
-                    return cookie.getValue(); // accessToken의 값 반환
+                if ("access_token".equals(cookie.getName())) {
+                    return cookie.getValue(); // Return cookie value
                 }
             }
         }
+
         return null;
     }
 }

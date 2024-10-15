@@ -30,7 +30,8 @@ public class AuthController {
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private final MemberService memberService;
     private final MemberRepository memberRepository;
-    @Value("spring.security.oauth2.client.registration.google-app.client-id")
+
+    @Value("${client-id}")
     private String CLIENT_ID;
 
     public AuthController(MemberService memberService, MemberRepository memberRepository) {
@@ -72,20 +73,8 @@ public class AuthController {
 
                 TokenResponseDto tokenResponseDto = memberService.processingGoogleUser(userDto);
 
-                Cookie accessTokenCookie = new Cookie("access_token", tokenResponseDto.getAccessToken());
-                accessTokenCookie.setHttpOnly(false);
-                accessTokenCookie.setSecure(false);
-                accessTokenCookie.setPath("/");
-                accessTokenCookie.setMaxAge(60 * 60 * 2);
-
-                Cookie refreshTokenCookie = new Cookie("refreshToken", tokenResponseDto.getRefreshToken());
-                refreshTokenCookie.setHttpOnly(false);
-                refreshTokenCookie.setSecure(false);
-                refreshTokenCookie.setPath("/");
-                refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60 * 2);
-
-                response.addCookie(accessTokenCookie);
-                response.addCookie(refreshTokenCookie);
+                response.setHeader("Authorization", "Bearer " + tokenResponseDto.getAccessToken());
+                response.setHeader("Authorization", "Bearer " + tokenResponseDto.getRefreshToken());
 
                 return ResponseEntity.ok().build();
             } else {
