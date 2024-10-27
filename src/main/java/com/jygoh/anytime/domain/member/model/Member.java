@@ -1,11 +1,13 @@
 package com.jygoh.anytime.domain.member.model;
 
+import com.jygoh.anytime.domain.chat.model.MemberGroupChat;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -22,6 +24,9 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
+    private String profileId;
+
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -30,6 +35,21 @@ public class Member {
     @Column(nullable = false)
     private String nickname;
 
+    private boolean isSignUpComplete = false;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isPrivate = false;
+
+    private int followingCount;
+
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Follow> followingRelations = new ArrayList<>();
+
+    private int followerCount;
+
+    @OneToMany(mappedBy = "followee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Follow> followerRelations = new ArrayList<>();
+
     private String profileImageUrl;
 
     private String providerId;
@@ -37,27 +57,37 @@ public class Member {
     @Column(unique = true)
     private String subjectId;
 
-    @ElementCollection
-    private List<Long> teamIds = new ArrayList<>();
+    @OneToMany(mappedBy = "member")
+    private List<MemberGroupChat> memberGroupChats = new ArrayList<>();
 
     @Builder(toBuilder = true)
-    public Member(String email, String password, String nickname, String profileImageUrl, String providerId, String subjectId) {
+    public Member(String email, String profileId, String password, String nickname, boolean isSignUpComplete,
+        boolean isPrivate, int followingCount, List<Follow> followingRelations, int followerCount,
+        List<Follow> followerRelations, String profileImageUrl, String providerId, String subjectId,
+        List<MemberGroupChat> memberGroupChats) {
         this.email = email;
+        this.profileId = profileId;
         this.password = password;
         this.nickname = nickname;
+        this.isSignUpComplete = isSignUpComplete;
+        this.isPrivate = isPrivate;
+        this.followingCount = followingCount;
+        this.followingRelations =
+            followingRelations != null ? followingRelations : new ArrayList<>();
+        this.followerCount = followerCount;
+        this.followerRelations = followerRelations != null ? followerRelations : new ArrayList<>();
         this.profileImageUrl = profileImageUrl;
         this.providerId = providerId;
         this.subjectId = subjectId;
+        this.memberGroupChats = memberGroupChats != null ? memberGroupChats : new ArrayList<>();
     }
 
-    public void addTeamId(Long teamId) {
-        if (!teamIds.contains(teamId)) {
-            teamIds.add(teamId);
-        }
+    public void updateProfileId(String profileId) {
+        this.profileId = profileId;
     }
 
-    public void removeTeamId(Long teamId) {
-        teamIds.remove(teamId);
+    public void updatePrivacy(boolean isPrivate) {
+        this.isPrivate = isPrivate;
     }
 
     public void updateEmail(String email) {
@@ -72,7 +102,37 @@ public class Member {
         this.nickname = nickname;
     }
 
+    public void setSignUpComplete(boolean isSignUpComplete) {
+        this.isSignUpComplete = isSignUpComplete;
+    }
+
     public void updateProviderId(String providerId) {
         this.providerId = providerId;
+    }
+
+    public void addFollowing(Member followee) {
+        Follow follow = new Follow(this, followee);
+        followingRelations.add(follow);
+        followingCount++;
+        followee.addFollower(this);
+    }
+
+    public void removeFollowing(Member followee) {
+        Follow follow = new Follow(this, followee);
+        followingRelations.remove(follow);
+        followingCount--;
+        followee.removeFollower(this);
+    }
+
+    public void addFollower(Member follower) {
+        Follow follow = new Follow(follower, this);
+        followerRelations.add(follow);
+        followerCount++;
+    }
+
+    public void removeFollower(Member follower) {
+        Follow follow = new Follow(follower, this);
+        followerRelations.remove(follow);
+        followerCount--;
     }
 }
