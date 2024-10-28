@@ -10,6 +10,7 @@ import lombok.Setter;
 public class IdTokenDto {
 
     private String idToken;
+
     @Builder
     public IdTokenDto(String idToken) {
         this.idToken = idToken;

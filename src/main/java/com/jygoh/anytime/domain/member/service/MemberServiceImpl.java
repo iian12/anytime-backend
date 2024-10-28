@@ -1,15 +1,19 @@
 package com.jygoh.anytime.domain.member.service;
 
 import com.jygoh.anytime.domain.member.dto.GoogleUserDto;
+import com.jygoh.anytime.domain.member.dto.ProfileIdDto;
 import com.jygoh.anytime.domain.member.dto.RegisterReqDto;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
+import com.jygoh.anytime.global.security.jwt.EncryptionUtils;
 import com.jygoh.anytime.global.security.jwt.JwtTokenProvider;
 import com.jygoh.anytime.global.security.jwt.TokenResponseDto;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional
@@ -25,7 +29,6 @@ public class MemberServiceImpl implements MemberService {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
     }
-
 
     @Override
     public void register(RegisterReqDto reqDto) {
@@ -51,25 +54,74 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public TokenResponseDto processingGoogleUser(GoogleUserDto dto) {
         Optional<Member> optionalMember = memberRepository.findByEmail(dto.getEmail());
+        TokenResponseDto tokenResponseDto = new TokenResponseDto();
+
         if (optionalMember.isPresent()) {
             Member existingMember = optionalMember.get();
-            existingMember.updateProviderId(dto.getSubjectId());
+
             String accessToken = jwtTokenProvider.createAccessToken(existingMember.getId());
             String refreshToken = jwtTokenProvider.createRefreshToken(existingMember.getId());
-            TokenResponseDto tokenResponseDto = new TokenResponseDto();
+
             tokenResponseDto.setAccessToken(accessToken);
             tokenResponseDto.setRefreshToken(refreshToken);
-            return tokenResponseDto;
         } else {
-            Member newMember = Member.builder().email(dto.getEmail()).nickname(dto.getNickname())
-                .profileImageUrl(dto.getProfileImageUrl()).providerId("Google").subjectId(dto.getSubjectId()).build();
+            Member newMember = Member.builder()
+                .email(dto.getEmail())
+                .nickname(dto.getNickname())
+                .profileImageUrl(dto.getProfileImageUrl())
+                .providerId("Google")
+                .subjectId(dto.getSubjectId())
+                .build();
+
             memberRepository.save(newMember);
-            String accessToken = jwtTokenProvider.createAccessToken(newMember.getId());
-            String refreshToken = jwtTokenProvider.createRefreshToken(newMember.getId());
+
+           try {
+               String encodedMemberId = EncryptionUtils.encrypt(String.valueOf(newMember.getId()));
+               tokenResponseDto.setEncodedMemberId(encodedMemberId);
+           } catch (Exception e) {
+               throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "예기치 않은 에러 발생");
+           }
+        }
+
+        return tokenResponseDto;
+    }
+
+    @Override
+    public TokenResponseDto setProfileId(ProfileIdDto profileIdDto) {
+        if (profileIdDto.getProfileId() == null || profileIdDto.getEncodedMemberId() == null) {
+            throw new IllegalArgumentException("Profile ID and Member ID are required");
+        }
+
+        boolean isProfileIdAvailable = isProfileIdAvailable(profileIdDto.getProfileId());
+        if (!isProfileIdAvailable) {
+            throw new IllegalArgumentException("중복된 닉네임입니다.");
+        }
+
+        Long decodedMemberId;
+
+        try {
+            decodedMemberId = Long.parseLong(EncryptionUtils.decrypt(profileIdDto.getProfileId()));
+
+            Member member = memberRepository.findById(decodedMemberId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid MemberID"));
+
+            member.updateProfileId(profileIdDto.getProfileId());
+            member.setSignUpComplete(true);
+
+            String accessToken = jwtTokenProvider.createAccessToken(decodedMemberId);
+            String refreshToken = jwtTokenProvider.createRefreshToken(decodedMemberId);
+
             TokenResponseDto tokenResponseDto = new TokenResponseDto();
             tokenResponseDto.setAccessToken(accessToken);
             tokenResponseDto.setRefreshToken(refreshToken);
+
             return tokenResponseDto;
+        } catch (Exception e) {
+            throw new RuntimeException("Internal Server Error: " + e.getMessage());
         }
+    }
+
+    private boolean isProfileIdAvailable(String profileId) {
+        return !memberRepository.existsByProfileId(profileId);
     }
 }

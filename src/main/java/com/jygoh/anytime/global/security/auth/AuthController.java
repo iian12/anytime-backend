@@ -7,6 +7,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.common.io.BaseEncoding;
 import com.jygoh.anytime.domain.member.dto.GoogleUserDto;
+import com.jygoh.anytime.domain.member.dto.ProfileIdDto;
 import com.jygoh.anytime.domain.member.dto.RegisterReqDto;
 import com.jygoh.anytime.domain.member.service.MemberService;
 import com.jygoh.anytime.global.security.jwt.TokenResponseDto;
@@ -30,7 +31,6 @@ public class AuthController {
 
     private final MemberService memberService;
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-
 
     @Value("${client-id}")
     private String CLIENT_ID;
@@ -75,16 +75,34 @@ public class AuthController {
 
                 TokenResponseDto tokenResponseDto = memberService.processingGoogleUser(userDto);
 
-                response.setHeader("Authorization", "Bearer " + tokenResponseDto.getAccessToken());
-                response.setHeader("Refresh-Token", "Bearer " + tokenResponseDto.getRefreshToken());
-
-                return ResponseEntity.ok().build();
+                if (tokenResponseDto.getAccessToken() != null && tokenResponseDto.getRefreshToken() != null) {
+                    response.setHeader("Authorization", "Bearer " + tokenResponseDto.getAccessToken());
+                    response.setHeader("Refresh-Token", "Bearer " + tokenResponseDto.getRefreshToken());
+                    return ResponseEntity.ok().build();
+                } else {
+                    return ResponseEntity.status(HttpStatus.PRECONDITION_REQUIRED)
+                        .body(tokenResponseDto.getEncodedMemberId());
+                }
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         } catch (BaseEncoding.DecodingException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (GeneralSecurityException | IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/set-nickname")
+    public ResponseEntity<?> setProfileId(@RequestBody ProfileIdDto profileIdDto, HttpServletResponse response) {
+        try {
+            TokenResponseDto tokenResponseDto = memberService.setProfileId(profileIdDto);
+            response.setHeader("Authorization", "Bearer" + tokenResponseDto.getAccessToken());
+            response.setHeader("Refresh-Token", "Bearer" + tokenResponseDto.getRefreshToken());
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }

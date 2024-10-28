@@ -8,6 +8,7 @@ import com.jygoh.anytime.global.security.jwt.NewAccessTokenResDto;
 import com.jygoh.anytime.global.security.jwt.RefreshToken;
 import com.jygoh.anytime.global.security.jwt.RefreshTokenRepository;
 import com.jygoh.anytime.global.security.jwt.TokenResponseDto;
+import com.jygoh.anytime.global.security.jwt.TokenUtils;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -63,7 +64,7 @@ public class AuthServiceImpl implements AuthService {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new IllegalArgumentException("Invalid refresh token");
         }
-        Long memberId = jwtTokenProvider.getMemberIdFromToken(refreshToken);
+        Long memberId = TokenUtils.getMemberIdFromToken(refreshToken);
         RefreshToken existingRefreshToken = refreshTokenRepository.findByMemberId(memberId)
             .orElseThrow(
                 () -> new IllegalArgumentException("Refresh token does not exist or is invalid"));
