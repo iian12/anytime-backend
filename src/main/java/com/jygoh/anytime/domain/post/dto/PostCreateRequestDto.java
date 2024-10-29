@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @NoArgsConstructor
@@ -13,15 +14,15 @@ public class PostCreateRequestDto {
     private String content;
     private List<String> hashtags;
     private List<String> userTags;
-    private List<String> mediaUrls;
+    private MultipartFile[] adjustedMediaFiles;
 
     @Builder
     private PostCreateRequestDto(String title, String content, List<String> hashtags,
-        List<String> userTags, List<String> mediaUrls) {
+        List<String> userTags, MultipartFile[] adjustedMediaFiles) {
         this.title = title;
         this.content = content;
         this.hashtags = hashtags;
         this.userTags = userTags;
-        this.mediaUrls = mediaUrls;
+        this.adjustedMediaFiles = adjustedMediaFiles;
     }
 }

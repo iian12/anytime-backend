@@ -5,8 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,83 +23,61 @@ public class MediaServiceImpl implements MediaService {
     @Value("${media.temp.upload-dir}")
     private String tempUploadDir;
 
-    private final List<String> temporaryFiles = new ArrayList<>();
-
     @Override
-    public String uploadOneMedia(MultipartFile file) throws IOException {   // 단일 미디어 업로드 ex) 스토리
+    public String uploadOneMedia(MultipartFile file) throws IOException {
         String extension = getFileExtension(file.getOriginalFilename());
-
-        if (extension.isEmpty()) {
-            throw new UnsupportedOperationException(file.getOriginalFilename());
+        boolean isSupportedType = isSupportedFileType(extension);
+        if (extension.isEmpty() || !isSupportedType) {
+            throw new IllegalArgumentException("지원되지 않는 미디어입니다.");
         }
-
         String fileName = UUID.randomUUID() + extension;
-        Path filePath = Paths.get(uploadDir + File.separator + fileName);
+        Path filePath = Paths.get(tempUploadDir + File.separator + fileName);
         Files.createDirectories(filePath.getParent());
+        file.transferTo(filePath);
 
+        return "http://localhost:8080/media/temp/" + fileName;
+    }
+
+
+    @Override
+    public String uploadAdjustedMedia(MultipartFile file) throws IOException {
+        String extension = getFileExtension(file.getOriginalFilename());
+        boolean isSupportedType = isSupportedFileType(extension);
+        if (extension.isEmpty() || !isSupportedType) {
+            throw new UnsupportedOperationException("지원되지 않는 미디어입니다.");
+        }
+        String fileName = UUID.randomUUID() + extension;
+        Path filePath = Paths.get(uploadDir, File.separator + fileName);
+        Files.createDirectories(filePath.getParent());
         file.transferTo(filePath.toFile());
-        String mediaUrl = "/media/temp/" + fileName;
-        temporaryFiles.add(mediaUrl);
-        return mediaUrl;
-    }
 
-    @Override
-    public List<String> uploadMedia(MultipartFile[] files) throws IOException {     // 다중 미디어 업로드 ex) 게시물
-        List<String> mediaUrls = new ArrayList<>();
+        String tempFileUrl = "http://localhost:8080/media/temp/" + fileName;
+        Path tempFilePath = Paths.get(tempUploadDir, fileName);
 
-        for (MultipartFile file : files) {
-            String extension = getFileExtension(file.getOriginalFilename());
-
-            if (extension.isEmpty()) {
-                throw new UnsupportedOperationException("지원되지 않는 미디어 타입입니다." + file.getOriginalFilename());
-            }
-
-            String fileName = UUID.randomUUID() + extension;
-            Path filePath = Paths.get(uploadDir + File.separator + fileName);
-            Files.createDirectories(filePath.getParent());
-
-            file.transferTo(filePath.toFile());
-
-            String mediaUrl = "/media/" + fileName;
-            mediaUrls.add(mediaUrl);
+        // 임시 파일이 존재하는 경우 삭제
+        if (Files.exists(tempFilePath)) {
+            deleteTemporaryMedia(tempFileUrl); // 임시 파일 삭제
         }
-        return mediaUrls;
+
+        return "http://localhost:8080/media/" + fileName;
     }
 
-    @Override
-    public void deleteTemporaryFile(String mediaUrl) throws IOException {
+    private void deleteTemporaryMedia(String mediaUrl) throws IOException {
         String fileName = mediaUrl.substring(mediaUrl.lastIndexOf("/") + 1);
-        Path filePath = Paths.get(uploadDir + File.separator + fileName);
-
+        Path filePath = Paths.get(tempUploadDir + File.separator + fileName);
         Files.deleteIfExists(filePath);
-        temporaryFiles.remove(mediaUrl);
-    }
-
-    @Override
-    public void moveMediaToPermanent(List<String> mediaUrls) throws IOException {
-        for (String mediaUrl : mediaUrls) {
-            String fileName = mediaUrl.substring(mediaUrl.lastIndexOf("/") + 1);
-            Path tempFilePath = Paths.get(tempUploadDir + File.separator + fileName);
-            Path permanentFilePath = Paths.get(uploadDir + File.separator + fileName);
-
-            Files.move(tempFilePath, permanentFilePath, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
-
-    @Override
-    public void deleteTempMedia(List<String> mediaUrls) throws IOException {
-        for (String mediaUrl : mediaUrls) {
-            String fileName = mediaUrl.substring(mediaUrl.lastIndexOf('/') + 1);
-            Path tempFilePath = Paths.get(tempUploadDir + File.separator + fileName);
-
-            Files.deleteIfExists(tempFilePath);
-        }
     }
 
     private String getFileExtension(String originalFilename) {
-        if (originalFilename != null && originalFilename.lastIndexOf('.') > 0) {
-            return originalFilename.substring(originalFilename.lastIndexOf('.'));
+        if (originalFilename != null && originalFilename.lastIndexOf(".") > 0) {
+            return originalFilename.substring(originalFilename.lastIndexOf("."));
         }
         return "";
+    }
+
+    private boolean isSupportedFileType(String extension) {
+        List<String> allowedExtensions = Arrays.asList(".jpg", ".jpeg", ".png", ".bmp", ".webp",
+            ".mp4", ".mov", ".avi", ".mkv", ".webm", ".gif");
+        return allowedExtensions.contains(extension);
     }
 }
