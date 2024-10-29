@@ -1,5 +1,7 @@
 package com.jygoh.anytime.global.config;
 
+import com.jygoh.anytime.global.exception.CustomAccessDeniedHandler;
+import com.jygoh.anytime.global.exception.JwtAuthenticationEntryPoint;
 import com.jygoh.anytime.global.security.auth.CustomOAuth2SuccessHandler;
 import com.jygoh.anytime.global.security.auth.CustomOAuth2UserService;
 import com.jygoh.anytime.global.security.auth.CustomUserDetailsService;
@@ -44,6 +46,10 @@ public class SecurityConfig {
                     .anyRequest().authenticated())
             .oauth2Login(oauth2 -> oauth2.successHandler(customOAuth2SuccessHandler)
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)))
+            .exceptionHandling(configurer -> {
+                configurer.authenticationEntryPoint(new JwtAuthenticationEntryPoint()); // 추가
+                configurer.accessDeniedHandler(new CustomAccessDeniedHandler());       // 추가
+            })
             .addFilterAfter(jwtTokenFilter(), OAuth2LoginAuthenticationFilter.class);
         return http.build();
     }

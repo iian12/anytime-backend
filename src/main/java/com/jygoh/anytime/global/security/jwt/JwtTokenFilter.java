@@ -48,6 +48,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             // Spring Security의 SecurityContext에 인증 정보를 설정합니다.
             SecurityContextHolder.getContext().setAuthentication(authentication);
+        } else if (token == null) {
+            SecurityContextHolder.clearContext();
         }
         // 다음 필터 체인으로 요청을 전달합니다.
         filterChain.doFilter(request, response);
