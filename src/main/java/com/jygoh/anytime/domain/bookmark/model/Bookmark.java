@@ -1,5 +1,6 @@
-package com.jygoh.anytime.domain.bookmark;
+package com.jygoh.anytime.domain.bookmark.model;
 
+import com.jygoh.anytime.domain.bookmark.category.model.BookmarkCategory;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.post.model.Post;
 import jakarta.persistence.Entity;
@@ -29,9 +30,14 @@ public class Bookmark {
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = true)
+    private BookmarkCategory category;
+
     @Builder
-    public Bookmark(Member member, Post post) {
+    public Bookmark(Member member, Post post, BookmarkCategory category) {
         this.member = member;
         this.post = post;
+        this.category = category;
     }
 }
