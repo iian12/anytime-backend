@@ -25,44 +25,44 @@ public class FollowController {
     }
 
     @GetMapping("/following")
-    public ResponseEntity<List<MemberSummaryDto>> getFollowing(@RequestBody ProfileIdReqDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<List<MemberSummaryDto>> getFollowing(@RequestBody ProfileIdReqDto profileIdReqDto, HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
-        List<MemberSummaryDto> dtoList = followService.getFollowingList(requestDto.getProfileId(), token);
+        List<MemberSummaryDto> dtoList = followService.getFollowingList(profileIdReqDto.getProfileId(), token);
         return ResponseEntity.ok().body(dtoList);
     }
 
     @GetMapping("/follower")
-    public ResponseEntity<List<MemberSummaryDto>> getFollower(@RequestBody ProfileIdReqDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<List<MemberSummaryDto>> getFollower(@RequestBody ProfileIdReqDto profileIdReqDto, HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
-        List<MemberSummaryDto> dtoList = followService.getFollowerList(requestDto.getProfileId(), token);
+        List<MemberSummaryDto> dtoList = followService.getFollowerList(profileIdReqDto.getProfileId(), token);
         return ResponseEntity.ok().body(dtoList);
     }
 
     @PostMapping("/toggle")
-    public ResponseEntity<String> toggleFollow(@RequestBody ProfileIdReqDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<String> toggleFollow(@RequestBody ProfileIdReqDto profileIdReqDto, HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
-        String response = followService.toggleFollow(requestDto.getProfileId(), token); // 팔로이, 팔로워
+        String response = followService.toggleFollow(profileIdReqDto.getProfileId(), token); // 팔로이, 팔로워
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/delete-follower")
-    public ResponseEntity<String> deleteFollower(@RequestBody ProfileIdReqDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<String> deleteFollower(@RequestBody ProfileIdReqDto profileIdReqDto, HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
-        followService.deleteFollower(requestDto.getProfileId(), token); // 삭제 대상, 사용자
+        followService.deleteFollower(profileIdReqDto.getProfileId(), token); // 삭제 대상, 사용자
         return ResponseEntity.ok("success");
     }
 
     @PostMapping("/accept")
-    public ResponseEntity<String> accept(@RequestBody ProfileIdReqDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<String> accept(@RequestBody ProfileIdReqDto profileIdReqDto, HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
-        String response = followService.acceptFollowRequest(requestDto.getProfileId(), token); // 팔로워, 팔로이
+        String response = followService.acceptFollowRequest(profileIdReqDto.getProfileId(), token); // 팔로워, 팔로이
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/reject")
-    public ResponseEntity<String> reject(@RequestBody ProfileIdReqDto requestDto, HttpServletRequest request) {
+    public ResponseEntity<String> reject(@RequestBody ProfileIdReqDto profileIdReqDto, HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
-        String response = followService.rejectFollowRequest(requestDto.getProfileId(), token); // 팔로워(삭제 대상), 팔로이(사용자)
+        String response = followService.rejectFollowRequest(profileIdReqDto.getProfileId(), token); // 팔로워(삭제 대상), 팔로이(사용자)
         return ResponseEntity.ok(response);
     }
 }

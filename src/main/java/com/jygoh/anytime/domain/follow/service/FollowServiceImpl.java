@@ -57,11 +57,11 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public List<MemberSummaryDto> getFollowerList(String profileId, String token) {
-        Member targetMember = memberRepository.findByProfileId(profileId)
+    public List<MemberSummaryDto> getFollowerList(String targetProfileId, String requesterToken) {
+        Member targetMember = memberRepository.findByProfileId(targetProfileId)
             .orElseThrow(() -> new IllegalArgumentException("Member not found"));
 
-        Member requester = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+        Member requester = memberRepository.findById(TokenUtils.getMemberIdFromToken(requesterToken))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
         if (targetMember.isPrivate()) {
@@ -84,77 +84,77 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public String toggleFollow(String targetProfileId, String token) {
-        Member requester = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+    public String toggleFollow(String targetProfileId, String requesterToken) {
+        Member requesterMember = memberRepository.findById(TokenUtils.getMemberIdFromToken(requesterToken))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
-        Member target = memberRepository.findByProfileId(targetProfileId)
+        Member targetMember = memberRepository.findByProfileId(targetProfileId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
-        if (followRepository.existsByFollowerAndFollowee(requester, target)) {
-            followRepository.deleteByFollowerAndFollowee(requester, target);
-            requester.removeFollowing(target);
+        if (followRepository.existsByFollowerAndFollowee(requesterMember, targetMember)) {
+            followRepository.deleteByFollowerAndFollowee(requesterMember, targetMember);
+            requesterMember.removeFollowing(targetMember);
             return "Unfollowed successfully";
         }
 
-        if (target.isPrivate()) {
+        if (targetMember.isPrivate()) {
             Optional<FollowRequest> existingRequest =
-                followRequestRepository.findByRequesterAndTarget(requester, target);
+                followRequestRepository.findByRequesterAndTarget(requesterMember, targetMember);
 
             if (existingRequest.isPresent()) {
                 followRequestRepository.delete(existingRequest.get());
                 return "Follow request canceled";
             } else {
                 FollowRequest followRequest = FollowRequest.builder()
-                    .requester(requester)
-                    .target(target)
+                    .requester(requesterMember)
+                    .target(targetMember)
                     .build();
                 followRequestRepository.save(followRequest);
                 return "Follow request sent";
             }
         } else {
             Follow follow = Follow.builder()
-                .follower(requester)
-                .followee(target)
+                .follower(requesterMember)
+                .followee(targetMember)
                 .build();
             followRepository.save(follow);
-            requester.addFollowing(target);
+            requesterMember.addFollowing(targetMember);
             return "Followed successfully";
         }
     }
 
     @Override
-    public void deleteFollower(String targetProfileId, String token) {
-        Member requester = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+    public void deleteFollower(String targetProfileId, String requesterToken) {
+        Member requesterMember = memberRepository.findById(TokenUtils.getMemberIdFromToken(requesterToken))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
-        Member target = memberRepository.findByProfileId(targetProfileId)
+        Member targetMember = memberRepository.findByProfileId(targetProfileId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
-        if (!followRepository.existsByFollowerAndFollowee(requester, target)) {
+        if (!followRepository.existsByFollowerAndFollowee(requesterMember, targetMember)) {
             throw new IllegalArgumentException("Follower is not followed");
         }
 
-        followRepository.deleteByFollowerAndFollowee(requester, target);
-        requester.removeFollower(target);
+        followRepository.deleteByFollowerAndFollowee(requesterMember, targetMember);
+        requesterMember.removeFollower(targetMember);
     }
 
     @Override
-    public String acceptFollowRequest(String targetProfileId, String token) {
-        Member FollowRequestTarget = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+    public String acceptFollowRequest(String requestTerProfileId, String targetMemberToken) {
+        Member targetMember = memberRepository.findById(TokenUtils.getMemberIdFromToken(targetMemberToken))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
-        Member requester = memberRepository.findByProfileId(targetProfileId)
+        Member requesterMember = memberRepository.findByProfileId(requestTerProfileId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
-        FollowRequest followRequest = followRequestRepository.findByRequesterAndTarget(requester, FollowRequestTarget)
+        FollowRequest followRequest = followRequestRepository.findByRequesterAndTarget(requesterMember, targetMember)
             .orElseThrow(() -> new IllegalArgumentException("Follow request not found"));
 
         followRequest.acceptRequest();
 
         Follow follow = Follow.builder()
-            .follower(requester)
-            .followee(FollowRequestTarget)
+            .follower(requesterMember)
+            .followee(targetMember)
             .build();
         followRepository.save(follow);
         followRequestRepository.delete(followRequest);
@@ -162,15 +162,15 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public String rejectFollowRequest(String targetProfileId, String token) {
-        Member FollowRequestTager = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+    public String rejectFollowRequest(String requesterProfileId, String targetMemberToken) {
+        Member targetMember = memberRepository.findById(TokenUtils.getMemberIdFromToken(targetMemberToken))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
-        Member requester = memberRepository.findByProfileId(targetProfileId)
+        Member requesterMember = memberRepository.findByProfileId(requesterProfileId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
-        FollowRequest followRequest = followRequestRepository.findByRequesterAndTarget(requester,
-                FollowRequestTager)
+        FollowRequest followRequest = followRequestRepository.findByRequesterAndTarget(requesterMember,
+                targetMember)
             .orElseThrow(() -> new IllegalArgumentException("Follow request not found"));
 
         followRequest.rejectRequest();
