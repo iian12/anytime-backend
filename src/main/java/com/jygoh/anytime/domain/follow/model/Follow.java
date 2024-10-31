@@ -1,5 +1,6 @@
-package com.jygoh.anytime.domain.member.model;
+package com.jygoh.anytime.domain.follow.model;
 
+import com.jygoh.anytime.domain.member.model.Member;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;

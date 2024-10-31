@@ -81,6 +81,7 @@ public class PostServiceImpl implements PostService {
             .reportCount(0).build();
 
         postRepository.save(post);
+        member.incrementPostCount();
 
         List<PostHashtag> postHashtags = hashtagService.createHashtags(
             requestDto.getHashtags(), post);

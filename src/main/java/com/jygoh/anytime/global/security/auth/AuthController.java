@@ -80,7 +80,7 @@ public class AuthController {
                     response.setHeader("Refresh-Token", "Bearer " + tokenResponseDto.getRefreshToken());
                     return ResponseEntity.ok().build();
                 } else {
-                    return ResponseEntity.status(HttpStatus.PRECONDITION_REQUIRED)
+                    return ResponseEntity.status(HttpStatus.PRECONDITION_REQUIRED) // HTTP 428
                         .body(tokenResponseDto.getEncodedMemberId());
                 }
             } else {
