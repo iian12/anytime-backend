@@ -85,47 +85,64 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public String toggleFollow(String targetProfileId, String requesterToken) {
-        Member requesterMember = memberRepository.findById(TokenUtils.getMemberIdFromToken(requesterToken))
+        Long requesterId = TokenUtils.getMemberIdFromToken(requesterToken);
+        Member requestMember = memberRepository.findById(requesterId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
         Member targetMember = memberRepository.findByProfileId(targetProfileId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
-        if (followRepository.existsByFollowerAndFollowee(requesterMember, targetMember)) {
-            followRepository.deleteByFollowerAndFollowee(requesterMember, targetMember);
-            requesterMember.removeFollowing(targetMember);
-            return "Unfollowed successfully";
+        Optional<Follow> existingFollow = followRepository.findByFollowerAndFollowee(requestMember, targetMember);
+
+        if (existingFollow.isPresent()) {
+            return handleUnfollow(existingFollow.get(), requestMember, targetMember);
         }
 
         if (targetMember.isPrivate()) {
-            Optional<FollowRequest> existingRequest =
-                followRequestRepository.findByRequesterAndTarget(requesterMember, targetMember);
-
-            if (existingRequest.isPresent()) {
-                followRequestRepository.delete(existingRequest.get());
-                return "Follow request canceled";
-            } else {
-                FollowRequest followRequest = FollowRequest.builder()
-                    .requester(requesterMember)
-                    .target(targetMember)
-                    .build();
-                followRequestRepository.save(followRequest);
-                return "Follow request sent";
-            }
+            return handleFollowRequest(requestMember, targetMember);
         } else {
-            Follow follow = Follow.builder()
-                .follower(requesterMember)
-                .followee(targetMember)
-                .build();
-            followRepository.save(follow);
-            requesterMember.addFollowing(targetMember);
-            return "Followed successfully";
+            return handleFollow(requestMember, targetMember);
         }
     }
 
+
+    private String handleUnfollow(Follow follow, Member requestMember, Member targetMember) {
+        followRepository.delete(follow);
+        requestMember.removeFollowingAndFollower(targetMember);
+        memberRepository.save(requestMember);
+        return "Unfollowed Successfully";
+    }
+
+    private String handleFollowRequest(Member requestMember, Member targetMember) {
+        Optional<FollowRequest> existingRequest = followRequestRepository.findByRequesterAndTarget(requestMember, targetMember);
+
+        if (existingRequest.isPresent()) {
+            followRequestRepository.delete(existingRequest.get());
+            return "Follow request canceled";
+        } else {
+            FollowRequest followRequest = FollowRequest.builder()
+                .requester(requestMember)
+                .target(targetMember)
+                .build();
+            followRequestRepository.save(followRequest);
+            return "Follow request sent";
+        }
+    }
+
+    private String handleFollow(Member requestMember, Member targetMember) {
+        Follow follow = Follow.builder()
+            .follower(requestMember)
+            .followee(targetMember)
+            .build();
+        followRepository.save(follow);
+        requestMember.addFollowingAndFollower(targetMember, follow);
+        memberRepository.save(requestMember);
+        return "Followed Successfully";
+    }
+
     @Override
-    public void deleteFollower(String targetProfileId, String requesterToken) {
-        Member requesterMember = memberRepository.findById(TokenUtils.getMemberIdFromToken(requesterToken))
+    public void deleteFollower(String targetProfileId, String requesterMemberToken) {
+        Member requesterMember = memberRepository.findById(TokenUtils.getMemberIdFromToken(requesterMemberToken))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
         Member targetMember = memberRepository.findByProfileId(targetProfileId)
@@ -136,7 +153,7 @@ public class FollowServiceImpl implements FollowService {
         }
 
         followRepository.deleteByFollowerAndFollowee(requesterMember, targetMember);
-        requesterMember.removeFollower(targetMember);
+        requesterMember.removeFollowingAndFollower(targetMember);
     }
 
     @Override

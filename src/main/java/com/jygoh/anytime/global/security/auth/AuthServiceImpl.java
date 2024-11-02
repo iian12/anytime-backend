@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponseDto login(LoginReqDto reqDto) {
         // 사용자 존재 여부 확인
         Member member = memberRepository.findByEmail(reqDto.getEmail())
-            .orElseThrow(() -> new BadCredentialsException("User does not exist"));
+            .orElseThrow(() -> new BadCredentialsException("ID 또는 비밀번호가 잘못되었습니다."));
 
         // 사용자 정보 로드
         UserDetails userDetails = userDetailsService.loadUserByUsername(reqDto.getEmail());
@@ -55,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
             tokenResponseDto.setRefreshToken(refreshToken);
             return tokenResponseDto;
         } else {
-            throw new BadCredentialsException("Invalid credentials");
+            throw new BadCredentialsException("ID 또는 비밀번호가 잘못되었습니다.");
         }
     }
 

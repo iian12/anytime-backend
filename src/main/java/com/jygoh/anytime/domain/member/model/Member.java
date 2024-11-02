@@ -63,18 +63,17 @@ public class Member {
     @OneToMany(mappedBy = "member")
     private List<MemberGroupChat> memberGroupChats = new ArrayList<>();
 
-    private boolean showNickname = true;
-    private boolean showProfileImage = true;
-    private boolean showFollowingCount = true;
-    private boolean showFollowerCount = true;
-    private boolean showPostCount = true;
+    private boolean showNickname;
+    private boolean showProfileImage;
+    private boolean showFollowingCount;
+    private boolean showFollowerCount;
+    private boolean showPostCount;
 
     @Builder(toBuilder = true)
     public Member(String email, String profileId, String password, String nickname, boolean isSignUpComplete,
         boolean isPrivate, int followingCount, List<Follow> followingRelations, int followerCount,
         List<Follow> followerRelations, String profileImageUrl, int postCount, String providerId, String subjectId,
-        List<MemberGroupChat> memberGroupChats, boolean showNickname, boolean showProfileImage,
-        boolean showFollowingCount, boolean showFollowerCount, boolean showPostCount) {
+        List<MemberGroupChat> memberGroupChats) {
         this.email = email;
         this.profileId = profileId;
         this.password = password;
@@ -91,11 +90,12 @@ public class Member {
         this.providerId = providerId;
         this.subjectId = subjectId;
         this.memberGroupChats = memberGroupChats != null ? memberGroupChats : new ArrayList<>();
-        this.showNickname = showNickname;
-        this.showProfileImage = showProfileImage;
-        this.showFollowingCount = showFollowingCount;
-        this.showFollowerCount = showFollowerCount;
-        this.showPostCount = showPostCount;
+        // 기본값 설정
+        this.showNickname = true;
+        this.showProfileImage = true;
+        this.showFollowingCount = true;
+        this.showFollowerCount = true;
+        this.showPostCount = true;
     }
 
     public void updateProfileId(String profileId) {
@@ -136,38 +136,18 @@ public class Member {
         }
     }
 
-    public void addFollowing(Member followee) {
-        Follow follow = new Follow(this, followee);
-        followingRelations.add(follow);
+    public void addFollowingAndFollower(Member member, Follow follow) {
+        followingRelations.add(follow); // 내 팔로우 목록에 추가
+        member.getFollowerRelations().add(follow); // 상대의 팔로워 목록에도 추가
         followingCount++;
-        followee.addFollower(this);
+        member.followerCount++;
     }
 
-    public void removeFollowing(Member followee) {
-        Follow follow = followingRelations.stream()
-            .filter(f -> f.getFollowee().equals(followee))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("팔로우 관계 없음"));
-
-        followingRelations.remove(follow);
+    public void removeFollowingAndFollower(Member member) {
+        followingRelations.removeIf(f -> f.getFollowee().equals(member));
+        member.followerRelations.removeIf(f -> f.getFollower().equals(this));
         followingCount--;
-        followee.removeFollower(this);
-    }
-
-    public void addFollower(Member follower) {
-        Follow follow = new Follow(follower, this);
-        followerRelations.add(follow);
-        followerCount++;
-    }
-
-    public void removeFollower(Member follower) {
-        Follow follow = followerRelations.stream()
-            .filter(f -> f.getFollower().equals(follower))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("팔로우 관계 없음"));
-
-        followerRelations.remove(follow);
-        followerCount--;
+        member.followerCount--;
     }
 
     // 공개 여부에 따른 정보 반환

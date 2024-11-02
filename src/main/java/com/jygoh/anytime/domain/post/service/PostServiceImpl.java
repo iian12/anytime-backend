@@ -67,12 +67,20 @@ public class PostServiceImpl implements PostService {
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
         List<String> permanentMediaUrls = new ArrayList<>();
-        for (MultipartFile file : requestDto.getAdjustedMediaFiles()) {
-            try {
-                String mediaUrl = mediaService.uploadAdjustedMedia(file);
-                permanentMediaUrls.add(mediaUrl);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("미디어 파일 저장 중 오류가 발생했습니다.");
+        MultipartFile[] adjustedMediaFiles = requestDto.getAdjustedMediaFiles();
+
+        if (adjustedMediaFiles != null) { // null 확인 후 반복문 실행
+            for (MultipartFile file : adjustedMediaFiles) {
+                if (file != null) { // null 파일 처리
+                    try {
+                        String mediaUrl = mediaService.uploadAdjustedMedia(file);
+                        permanentMediaUrls.add(mediaUrl);
+                    } catch (IOException e) {
+                        throw new IllegalArgumentException("미디어 파일 저장 중 오류가 발생했습니다.");
+                    }
+                } else {
+                    throw new IllegalArgumentException("미디어 파일 저장 중 오류가 발생했습니다.");
+                }
             }
         }
 

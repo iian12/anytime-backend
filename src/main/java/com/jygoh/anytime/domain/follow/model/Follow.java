@@ -1,11 +1,13 @@
 package com.jygoh.anytime.domain.follow.model;
 
 import com.jygoh.anytime.domain.member.model.Member;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,16 +18,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Follow {
 
-    @EmbeddedId
-    private FollowId id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
-    @MapsId("followerId")
     @JoinColumn(name = "follower_id")
     private Member follower;
 
     @ManyToOne
-    @MapsId("followeeId")
     @JoinColumn(name = "followee_id")
     private Member followee;
 
@@ -34,7 +35,17 @@ public class Follow {
     public Follow(Member follower, Member followee) {
         this.follower = follower;
         this.followee = followee;
-        this.id = new FollowId(follower.getId(), followee.getId());
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Follow follow)) return false;
+        return follower.equals(follow.follower) && followee.equals(follow.followee);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(follower, followee);
+    }
 }
