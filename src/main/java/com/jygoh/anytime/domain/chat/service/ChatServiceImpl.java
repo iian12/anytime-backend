@@ -13,6 +13,7 @@ import com.jygoh.anytime.domain.follow.repository.FollowRepository;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
+import com.jygoh.anytime.global.security.utils.EncodeDecode;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -106,11 +107,11 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ChatSessionDto acceptChatRequest(Long chatRequestId, String token) {
+    public ChatSessionDto acceptChatRequest(String chatRequestId, String token) {
         Member requester = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new RuntimeException("Invalid User"));
 
-        ChatRequest chatRequest = chatRequestRepository.findById(chatRequestId)
+        ChatRequest chatRequest = chatRequestRepository.findById(EncodeDecode.decode(chatRequestId))
             .orElseThrow(() -> new RuntimeException("채팅 요청을 찾을 수 없습니다."));
 
         chatRequest.accept();
@@ -137,7 +138,7 @@ public class ChatServiceImpl implements ChatService {
     private ChatSessionDto convertToDTO(MemberChat memberChat) {
         List<ChatMessageDto> messageDTOs = memberChat.getMessages().stream()
             .map(message -> ChatMessageDto.builder()
-                .id(message.getId())
+                .id(EncodeDecode.encode(message.getId()))
                 .content(message.getContent())
                 .timeStamp(message.getTimeStamp())
                 .isRead(message.isRead())
@@ -145,7 +146,7 @@ public class ChatServiceImpl implements ChatService {
             .collect(Collectors.toList());
 
         return ChatSessionDto.builder()
-            .id(memberChat.getId())
+            .id(EncodeDecode.encode(memberChat.getId()))
             .member1Nickname(memberChat.getMember1().getNickname())
             .member2Nickname(memberChat.getMember2().getNickname())
             .member2ProfileImageUrl(memberChat.getMember2().getProfileImageUrl())
@@ -155,11 +156,11 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void rejectChatRequest(Long chatRequestId, String token) {
+    public void rejectChatRequest(String chatRequestId, String token) {
         Member requester = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new RuntimeException("Invalid User"));
 
-        ChatRequest chatRequest = chatRequestRepository.findById(chatRequestId)
+        ChatRequest chatRequest = chatRequestRepository.findById(EncodeDecode.decode(chatRequestId))
             .orElseThrow(() -> new RuntimeException("채팅 요청을 찾을 수 없습니다."));
 
         // 채팅 요청의 요청자가 현재 요청자와 동일한지 확인
@@ -172,11 +173,11 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ChatMessageDto sendMessage(Long chatSessionId, String token, String messageContent) {
+    public ChatMessageDto sendMessage(String chatSessionId, String token, String messageContent) {
         Member sender = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
-        MemberChat memberChat = memberChatRepository.findById(chatSessionId)
+        MemberChat memberChat = memberChatRepository.findById(EncodeDecode.decode(chatSessionId))
             .orElseThrow(() -> new RuntimeException("채팅 세션을 찾을 수 없습니다."));
 
         ChatMessage chatMessage = ChatMessage.builder()
@@ -186,9 +187,9 @@ public class ChatServiceImpl implements ChatService {
             .build();
         memberChat.addMessage(chatMessage);
         chatMessage = chatMessageRepository.save(chatMessage);
-        
+
         return ChatMessageDto.builder()
-            .id(chatMessage.getId())
+            .id(EncodeDecode.encode(chatMessage.getId()))
             .content(chatMessage.getContent())
             .timeStamp(chatMessage.getTimeStamp())
             .isRead(chatMessage.isRead())
@@ -196,11 +197,11 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void markMessageAsRead(Long chatMessageId, String token) {
+    public void markMessageAsRead(String chatMessageId, String token) {
         Member requester = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
-        ChatMessage chatMessage = chatMessageRepository.findById(chatMessageId)
+        ChatMessage chatMessage = chatMessageRepository.findById(EncodeDecode.decode(chatMessageId))
             .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
 
         // 메시지의 수신자가 현재 요청자와 동일한지 확인
@@ -225,11 +226,11 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void deleteMessage(Long messageId, String token) {
+    public void deleteMessage(String messageId, String token) {
         Member requester = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
-        ChatMessage chatMessage = chatMessageRepository.findById(messageId)
+        ChatMessage chatMessage = chatMessageRepository.findById(EncodeDecode.decode(messageId))
             .orElseThrow(() -> new RuntimeException("메시지를 찾을 수 없습니다."));
 
         if (chatMessage.getSender().equals(requester)) {
@@ -244,11 +245,11 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public List<ChatMessageDto> getMessages(Long chatSessionId, String token) {
+    public List<ChatMessageDto> getMessages(String chatSessionId, String token) {
         Member requester = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
-        MemberChat memberChat = memberChatRepository.findById(chatSessionId)
+        MemberChat memberChat = memberChatRepository.findById(EncodeDecode.decode(chatSessionId))
             .orElseThrow(() -> new RuntimeException("채팅 세션을 찾을 수 없습니다."));
 
         return memberChat.getMessages().stream()
@@ -261,7 +262,7 @@ public class ChatServiceImpl implements ChatService {
                 return true;
             })
             .map(message -> ChatMessageDto.builder()
-                .id(message.getId())
+                .id(EncodeDecode.encode(message.getId()))
                 .content(message.getContent())
                 .timeStamp(message.getTimeStamp())
                 .isRead(message.isRead())

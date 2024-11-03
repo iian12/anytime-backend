@@ -9,10 +9,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class HashtagDto {
 
-    private Long id;
+    private String id;
     private String name;
 
-    public HashtagDto(Long id, String name) {
+    public HashtagDto(String id, String name) {
         this.id = id;
         this.name = name;
     }

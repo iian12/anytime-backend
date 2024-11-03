@@ -8,6 +8,7 @@ import com.jygoh.anytime.domain.hashtag.repository.HashtagRepository;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
+import com.jygoh.anytime.global.security.utils.EncodeDecode;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -30,10 +31,10 @@ public class HashtagFollowServiceImpl implements HashtagFollowService {
 
 
     @Override
-    public boolean toggleFollowHashtag(Long hashtagId, String token) {
+    public boolean toggleFollowHashtag(String hashtagId, String token) {
         Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
-        Hashtag hashtag = hashtagRepository.findById(hashtagId)
+        Hashtag hashtag = hashtagRepository.findById(EncodeDecode.decode(hashtagId))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Hashtag"));
 
         if (hashtagFollowerRepository.existsByMemberAndHashtag(member, hashtag)) {
@@ -52,7 +53,7 @@ public class HashtagFollowServiceImpl implements HashtagFollowService {
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
         return hashtagFollowerRepository.findAllByMember(member).stream()
-            .map(follower -> new HashtagDto(follower.getHashtag().getId(), follower.getHashtag().getName()))
+            .map(follower -> new HashtagDto(EncodeDecode.encode(follower.getHashtag().getId()), follower.getHashtag().getName()))
             .collect(Collectors.toList());
     }
 }

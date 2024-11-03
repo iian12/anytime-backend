@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface HashtagFollowService {
 
-    boolean toggleFollowHashtag(Long hashtagId, String token);
+    boolean toggleFollowHashtag(String hashtagId, String token);
 
     List<HashtagDto> getFollowedHashtag(String token);
 }

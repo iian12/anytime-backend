@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ChatSessionDto {
 
-    private Long id;
+    private String id;
     private String member1Nickname;
     private String member2ProfileId; // 상대방의 프로필 ID
     private String member2Nickname; // 상대방의 닉네임
@@ -17,7 +17,7 @@ public class ChatSessionDto {
     private List<ChatMessageDto> messages;
 
     @Builder
-    public ChatSessionDto(Long id, String member1Nickname, String member2ProfileId,
+    public ChatSessionDto(String id, String member1Nickname, String member2ProfileId,
         String member2Nickname, String member2ProfileImageUrl, List<ChatMessageDto> messages) {
         this.id = id;
         this.member1Nickname = member1Nickname;

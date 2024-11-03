@@ -9,14 +9,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ChatMessageDto {
 
-    private Long id;
+    private String id;
     private String content;
     private LocalDateTime timeStamp;
     private boolean isRead;
 
 
     @Builder
-    public ChatMessageDto(Long id, String content, LocalDateTime timeStamp, boolean isRead) {
+    public ChatMessageDto(String id, String content, LocalDateTime timeStamp, boolean isRead) {
         this.id = id;
         this.content = content;
         this.timeStamp = timeStamp;

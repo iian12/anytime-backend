@@ -1,13 +1,10 @@
-package com.jygoh.anytime.global.handler;
+package com.jygoh.anytime.domain.chat.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jygoh.anytime.domain.chat.dto.ChatMessageDto;
-import com.jygoh.anytime.domain.chat.dto.ChatMessageRequest;
 import com.jygoh.anytime.domain.chat.dto.ChatSessionDto;
 import com.jygoh.anytime.domain.chat.service.ChatService;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -19,21 +16,20 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.socket.WebSocketSession;
 
 @Slf4j
 @Controller
-public class ChatMessageHandler {
+public class MessageController {
 
     private final ChatService chatService;
 
-    public ChatMessageHandler(ChatService chatService) {
+    public MessageController(ChatService chatService) {
         this.chatService = chatService;
     }
 
-    @MessageMapping("{chatSessionId}")
-    @SendTo("/api/sub/{chatSessionId}")
-    public ChatMessageDto sendMessage(@DestinationVariable("chatSessionId") Long chatSessionId,
+    @MessageMapping("/private/{chatSessionId}")
+    @SendTo("/api/sub/private/{chatSessionId}")
+    public ChatMessageDto sendMessage(@DestinationVariable("chatSessionId") String chatSessionId,
         @Payload String content, Message<?> message) {
         // STOMP 헤더에서 세션 속성을 가져옵니다.
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
@@ -44,28 +40,28 @@ public class ChatMessageHandler {
     }
 
     @MessageMapping("/accept/{chatRequestId}")
-    @SendTo("/topic/chat")
-    public ResponseEntity<ChatSessionDto> acceptChatRequest(@PathVariable Long chatRequestId,
-        HttpServletRequest request) {
-        String token = TokenUtils.extractTokenFromRequest(request);
-        ChatSessionDto chatSessionDto = chatService.acceptChatRequest(chatRequestId, token);
-        return ResponseEntity.ok(chatSessionDto);
+    @SendTo("/api/sub/{chatRequestId}")
+    public ChatSessionDto acceptChatRequest(@PathVariable String chatRequestId,
+        Message<?> message) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+        String token = (String) Objects.requireNonNull(accessor.getSessionAttributes()).get("Authorization");
+        return chatService.acceptChatRequest(chatRequestId, token);
     }
 
     @MessageMapping("/reject/{chatRequestId}")
-    @SendTo("/topic/chat")
-    public ResponseEntity<Void> rejectChatRequest(@PathVariable Long chatRequestId,
-        HttpServletRequest request) {
-        String token = TokenUtils.extractTokenFromRequest(request);
+    @SendTo("/api/sub/{chatRequestId}")
+    public void rejectChatRequest(@PathVariable String chatRequestId,
+        Message<?> message) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+        String token = (String) Objects.requireNonNull(accessor.getSessionAttributes()).get("Authorization");
         chatService.rejectChatRequest(chatRequestId, token);
-        return ResponseEntity.noContent().build();
     }
 
-    @MessageMapping("/read/{chatMessageId}")
-    public ResponseEntity<Void> markMessageAsRead(@PathVariable Long chatMessageId,
-        HttpServletRequest request) {
-        String token = TokenUtils.extractTokenFromRequest(request);
+    @MessageMapping("/read/private/{chatMessageId}")
+    public void markMessageAsRead(@PathVariable String chatMessageId,
+        Message<?> message) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+        String token = (String) Objects.requireNonNull(accessor.getSessionAttributes()).get("Authorization");
         chatService.markMessageAsRead(chatMessageId, token);
-        return ResponseEntity.noContent().build();
     }
 }

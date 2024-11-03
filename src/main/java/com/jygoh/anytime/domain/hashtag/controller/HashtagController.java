@@ -23,7 +23,7 @@ public class HashtagController {
     }
 
     @PostMapping("/{hashtagId}/toggle-follow")
-    public ResponseEntity<Boolean> toggleFollow(@PathVariable Long hashtagId, HttpServletRequest request) {
+    public ResponseEntity<Boolean> toggleFollow(@PathVariable String hashtagId, HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
         boolean isFollowing = hashtagFollowService.toggleFollowHashtag(hashtagId, token);
         return ResponseEntity.ok(isFollowing);

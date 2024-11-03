@@ -13,17 +13,17 @@ public interface ChatService {
 
     ChatSessionDto createChatSession(Member requester, Member target, String messageContent);
 
-    ChatSessionDto acceptChatRequest(Long chatRequestId, String token);
+    ChatSessionDto acceptChatRequest(String chatRequestId, String token);
 
-    void rejectChatRequest(Long chatRequestId, String token);
+    void rejectChatRequest(String chatRequestId, String token);
 
-    ChatMessageDto sendMessage(Long chatSessionId, String token, String messageContent);
+    ChatMessageDto sendMessage(String chatSessionId, String token, String messageContent);
 
-    void markMessageAsRead(Long chatMessageId, String token);
+    void markMessageAsRead(String chatMessageId, String token);
 
     List<ChatSessionDto> getChatSessions(String token);
 
-    void deleteMessage(Long messageId, String token);
+    void deleteMessage(String messageId, String token);
 
-    List<ChatMessageDto> getMessages(Long chatSessionId, String token);
+    List<ChatMessageDto> getMessages(String chatSessionId, String token);
 }
