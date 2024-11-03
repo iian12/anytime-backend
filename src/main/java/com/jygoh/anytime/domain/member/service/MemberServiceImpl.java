@@ -1,7 +1,7 @@
 package com.jygoh.anytime.domain.member.service;
 
 import com.jygoh.anytime.domain.member.dto.GoogleUserDto;
-import com.jygoh.anytime.domain.member.dto.ProfileIdDto;
+import com.jygoh.anytime.domain.member.dto.SetProfileIdDto;
 import com.jygoh.anytime.domain.member.dto.RegisterReqDto;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional
-public class MemberServiceImpl implements com.jygoh.anytime.domain.member.service.MemberService {
+public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -99,12 +99,12 @@ public class MemberServiceImpl implements com.jygoh.anytime.domain.member.servic
     }
 
     @Override
-    public TokenResponseDto setProfileId(ProfileIdDto profileIdDto) {
-        if (profileIdDto.getProfileId() == null || profileIdDto.getEncodedMemberId() == null) {
+    public TokenResponseDto setProfileId(SetProfileIdDto setProfileIdDto) {
+        if (setProfileIdDto.getProfileId() == null || setProfileIdDto.getEncodedMemberId() == null) {
             throw new IllegalArgumentException("Profile ID and Member ID are required");
         }
 
-        boolean isProfileIdAvailable = isProfileIdAvailable(profileIdDto.getProfileId());
+        boolean isProfileIdAvailable = isProfileIdAvailable(setProfileIdDto.getProfileId());
         if (!isProfileIdAvailable) {
             throw new IllegalArgumentException("중복된 닉네임입니다.");
         }
@@ -112,12 +112,12 @@ public class MemberServiceImpl implements com.jygoh.anytime.domain.member.servic
         Long decodedMemberId;
 
         try {
-            decodedMemberId = Long.parseLong(EncryptionUtils.decrypt(profileIdDto.getProfileId()));
+            decodedMemberId = Long.parseLong(EncryptionUtils.decrypt(setProfileIdDto.getProfileId()));
 
             Member member = memberService.findById(decodedMemberId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid MemberID"));
 
-            member.updateProfileId(profileIdDto.getProfileId());
+            member.updateProfileId(setProfileIdDto.getProfileId());
             member.setSignUpComplete(true);
 
             String accessToken = jwtTokenProvider.createAccessToken(decodedMemberId);

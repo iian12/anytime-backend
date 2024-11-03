@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class ProfileIdDto {
+public class SetProfileIdDto {
 
     private String encodedMemberId;
     private String profileId;

@@ -8,7 +8,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.common.io.BaseEncoding;
 import com.jygoh.anytime.domain.member.dto.GoogleUserDto;
 import com.jygoh.anytime.domain.member.dto.LoginReqDto;
-import com.jygoh.anytime.domain.member.dto.ProfileIdDto;
+import com.jygoh.anytime.domain.member.dto.SetProfileIdDto;
 import com.jygoh.anytime.domain.member.dto.RegisterReqDto;
 import com.jygoh.anytime.domain.member.service.MemberService;
 import com.jygoh.anytime.global.security.auth.service.AuthService;
@@ -85,14 +85,13 @@ public class AuthController {
                 String email = payload.getEmail();
                 String nickname = (String) payload.get("name");
                 String profileImageUrl = (String) payload.get("picture");
-                log.info(profileImageUrl);
-                String providerId = payload.getSubject();
+                String subjectId = payload.getSubject();
 
                 GoogleUserDto userDto = new GoogleUserDto();
                 userDto.setEmail(email);
                 userDto.setNickname(nickname);
                 userDto.setProfileImageUrl(profileImageUrl);
-                userDto.setSubjectId(providerId);
+                userDto.setSubjectId(subjectId);
 
                 TokenResponseDto tokenResponseDto = memberService.processingGoogleUser(userDto);
                 log.info(tokenResponseDto.getAccessToken());
@@ -114,10 +113,10 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/set-nickname")
-    public ResponseEntity<?> setProfileId(@RequestBody ProfileIdDto profileIdDto, HttpServletResponse response) {
+    @PostMapping("/set-profile")
+    public ResponseEntity<?> setProfileId(@RequestBody SetProfileIdDto setProfileIdDto, HttpServletResponse response) {
         try {
-            TokenResponseDto tokenResponseDto = memberService.setProfileId(profileIdDto);
+            TokenResponseDto tokenResponseDto = memberService.setProfileId(setProfileIdDto);
             response.setHeader("Authorization", "Bearer" + tokenResponseDto.getAccessToken());
             response.setHeader("Refresh-Token", "Bearer" + tokenResponseDto.getRefreshToken());
             return ResponseEntity.ok().build();
