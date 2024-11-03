@@ -92,6 +92,10 @@ public class FollowServiceImpl implements FollowService {
         Member targetMember = memberService.findByProfileId(targetProfileId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
+        if (requestMember.getId().equals(targetMember.getId())) {
+            throw new IllegalArgumentException("You cannot follow yourself");
+        }
+
         Optional<Follow> existingFollow = followRepository.findByFollowerAndFollowee(requestMember, targetMember);
 
         if (existingFollow.isPresent()) {

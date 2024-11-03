@@ -7,6 +7,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -29,13 +30,21 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         CustomUserDetail userDetail = (CustomUserDetail) authentication.getPrincipal();
         Long memberId = userDetail.getMemberId();
 
-        String accessToken = jwtTokenProvider.createAccessToken(memberId);
-        String refreshToken = jwtTokenProvider.createRefreshToken(userDetail.getMemberId());
-        Cookie accessTokenCookie = createCookie("access_token", accessToken);
-        Cookie refreshTokenCookie = createCookie("refresh_token", refreshToken);
-        // 쿠키를 응답에 추가
-        response.addCookie(accessTokenCookie);
-        response.addCookie(refreshTokenCookie);
+        // 프로필 ID가 존재하는지 확인
+        if (userDetail.getProfileId() == null) {
+            response.sendError(HttpStatus.PRECONDITION_REQUIRED.value(), "Set ProfileID");
+        } else {
+            // 프로필 ID가 없을 경우 별도의 처리 (예: 오류 응답 반환)
+            String accessToken = jwtTokenProvider.createAccessToken(memberId);
+            String refreshToken = jwtTokenProvider.createRefreshToken(memberId);
+
+            Cookie accessTokenCookie = createCookie("access_token", accessToken);
+            Cookie refreshTokenCookie = createCookie("refresh_token", refreshToken);
+
+            // 쿠키를 응답에 추가
+            response.addCookie(accessTokenCookie);
+            response.addCookie(refreshTokenCookie);
+        }
     }
 
     private Cookie createCookie(String name, String token) {

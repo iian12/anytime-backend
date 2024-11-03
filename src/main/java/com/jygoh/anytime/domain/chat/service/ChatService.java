@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface ChatService {
 
-    Optional<ChatSessionDto> initiateChat(ChatMessageRequest request, String token);
+    ChatSessionDto initiateChat(ChatMessageRequest request, String token);
 
     ChatSessionDto createChatSession(Member requester, Member target, String messageContent);
 

@@ -59,12 +59,24 @@ public class MemberServiceImpl implements com.jygoh.anytime.domain.member.servic
         if (optionalMember.isPresent()) {
             Member existingMember = optionalMember.get();
 
-            String accessToken = jwtTokenProvider.createAccessToken(existingMember.getId());
-            String refreshToken = jwtTokenProvider.createRefreshToken(existingMember.getId());
+            // 사용자가 존재하고 profileId가 없는 경우
+            if (existingMember.getProfileId() == null) {
+                try {
+                    String encodedMemberId = EncryptionUtils.encrypt(String.valueOf(existingMember.getId()));
+                    tokenResponseDto.setEncodedMemberId(encodedMemberId);
+                } catch (Exception e) {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "예기치 않은 에러 발생");
+                }
+            } else {
 
-            tokenResponseDto.setAccessToken(accessToken);
-            tokenResponseDto.setRefreshToken(refreshToken);
+                String accessToken = jwtTokenProvider.createAccessToken(existingMember.getId());
+                String refreshToken = jwtTokenProvider.createRefreshToken(existingMember.getId());
+
+                tokenResponseDto.setAccessToken(accessToken);
+                tokenResponseDto.setRefreshToken(refreshToken);
+            }
         } else {
+            // 새로운 회원 생성
             Member newMember = Member.builder()
                 .email(dto.getEmail())
                 .nickname(dto.getNickname())
@@ -75,12 +87,12 @@ public class MemberServiceImpl implements com.jygoh.anytime.domain.member.servic
 
             memberService.save(newMember);
 
-           try {
-               String encodedMemberId = EncryptionUtils.encrypt(String.valueOf(newMember.getId()));
-               tokenResponseDto.setEncodedMemberId(encodedMemberId);
-           } catch (Exception e) {
-               throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "예기치 않은 에러 발생");
-           }
+            try {
+                String encodedMemberId = EncryptionUtils.encrypt(String.valueOf(newMember.getId()));
+                tokenResponseDto.setEncodedMemberId(encodedMemberId);
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "예기치 않은 에러 발생");
+            }
         }
 
         return tokenResponseDto;

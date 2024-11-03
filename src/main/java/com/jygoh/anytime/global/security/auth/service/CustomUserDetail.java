@@ -85,4 +85,8 @@ public class CustomUserDetail implements UserDetails, OAuth2User {
     public Member getMember() {
         return member;
     }
+
+    public String getProfileId() {
+        return member != null ? member.getProfileId() : null;
+    }
 }

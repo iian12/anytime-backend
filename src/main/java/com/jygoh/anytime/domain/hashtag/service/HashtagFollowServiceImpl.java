@@ -21,12 +21,14 @@ public class HashtagFollowServiceImpl implements HashtagFollowService {
     private final HashtagFollowerRepository hashtagFollowerRepository;
     private final HashtagRepository hashtagRepository;
     private final MemberRepository memberService;
+    private final EncodeDecode encodeDecode;
 
     public HashtagFollowServiceImpl(HashtagFollowerRepository hashtagFollowerRepository,
-        HashtagRepository hashtagRepository, MemberRepository memberService) {
+        HashtagRepository hashtagRepository, MemberRepository memberService, EncodeDecode encodeDecode) {
         this.hashtagFollowerRepository = hashtagFollowerRepository;
         this.hashtagRepository = hashtagRepository;
         this.memberService = memberService;
+        this.encodeDecode = encodeDecode;
     }
 
 
@@ -34,7 +36,7 @@ public class HashtagFollowServiceImpl implements HashtagFollowService {
     public boolean toggleFollowHashtag(String hashtagId, String token) {
         Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
-        Hashtag hashtag = hashtagRepository.findById(EncodeDecode.decode(hashtagId))
+        Hashtag hashtag = hashtagRepository.findById(encodeDecode.decode(hashtagId))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Hashtag"));
 
         if (hashtagFollowerRepository.existsByMemberAndHashtag(member, hashtag)) {
@@ -53,7 +55,8 @@ public class HashtagFollowServiceImpl implements HashtagFollowService {
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
         return hashtagFollowerRepository.findAllByMember(member).stream()
-            .map(follower -> new HashtagDto(EncodeDecode.encode(follower.getHashtag().getId()), follower.getHashtag().getName()))
+            .map(follower -> new HashtagDto(encodeDecode.encode(
+                follower.getHashtag().getId()), follower.getHashtag().getName()))
             .collect(Collectors.toList());
     }
 }

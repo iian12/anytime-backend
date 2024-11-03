@@ -103,6 +103,13 @@ public class Member {
         this.showPostCount = true;
     }
 
+    public void updateInfo(String email, String nickname, String providerId, String subjectId) {
+        this.email = email;
+        this.nickname = nickname;
+        this.providerId = providerId;
+        this.subjectId = subjectId;
+    }
+
     public void updateProfileId(String profileId) {
         this.profileId = profileId;
     }

@@ -36,16 +36,18 @@ public class PostServiceImpl implements PostService {
     private final UserTagService userTagService;
     private final LikeRepository likeRepository;
     private final MediaService mediaService;
+    private final EncodeDecode encodeDecode;
 
     public PostServiceImpl(PostRepository postRepository, MemberRepository memberService,
         HashtagService hashtagService, UserTagService userTagService, LikeRepository likeRepository,
-        MediaService mediaService) {
+        MediaService mediaService, EncodeDecode encodeDecode) {
         this.postRepository = postRepository;
         this.memberService = memberService;
         this.hashtagService = hashtagService;
         this.userTagService = userTagService;
         this.likeRepository = likeRepository;
         this.mediaService = mediaService;
+        this.encodeDecode = encodeDecode;
     }
 
     @Override
@@ -56,7 +58,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostDetailDto getPostDetail(String postId) {
-        Post post = postRepository.findById(EncodeDecode.decode(postId))
+        Post post = postRepository.findById(encodeDecode.decode(postId))
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
         post.incrementViewCount();
         return new PostDetailDto(post);
@@ -97,7 +99,7 @@ public class PostServiceImpl implements PostService {
         List<UserTag> userTags = userTagService.createUserTags(requestDto.getUserTags(), post);
         post.addDetails(postHashtags, userTags);
 
-        return EncodeDecode.encode(post.getId());
+        return encodeDecode.encode(post.getId());
     }
 
     @Override
@@ -105,7 +107,7 @@ public class PostServiceImpl implements PostService {
         Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
-        Post post = postRepository.findById(EncodeDecode.decode(postId))
+        Post post = postRepository.findById(encodeDecode.decode(postId))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Post"));
 
         Optional<Like> existingLike = likeRepository.findByMemberAndPost(member, post);

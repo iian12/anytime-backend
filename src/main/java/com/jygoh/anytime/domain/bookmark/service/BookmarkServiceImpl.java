@@ -25,14 +25,17 @@ public class BookmarkServiceImpl implements BookmarkService {
     private final MemberRepository memberService;
     private final PostRepository postRepository;
     private final CategoryRepository categoryRepository;
+    private final EncodeDecode encodeDecode;
+
 
     public BookmarkServiceImpl(BookmarkRepository bookmarkRepository,
         MemberRepository memberService, PostRepository postRepository,
-        CategoryRepository categoryRepository) {
+        CategoryRepository categoryRepository, EncodeDecode encodeDecode) {
         this.bookmarkRepository = bookmarkRepository;
         this.memberService = memberService;
         this.postRepository = postRepository;
         this.categoryRepository = categoryRepository;
+        this.encodeDecode = encodeDecode;
     }
 
 
@@ -40,7 +43,7 @@ public class BookmarkServiceImpl implements BookmarkService {
     public boolean toggleBookmark(String postId, CategoryReqDto requestDto, String token) {
         Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
-        Post post = postRepository.findById(EncodeDecode.decode(postId))
+        Post post = postRepository.findById(encodeDecode.decode(postId))
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
         BookmarkCategory category = categoryRepository.findById(requestDto.getCategoryId())
             .orElseGet(() -> {

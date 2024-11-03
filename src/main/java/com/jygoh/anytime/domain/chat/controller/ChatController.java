@@ -22,13 +22,18 @@ public class ChatController {
     }
 
     @PostMapping("/initiate")
-    public ResponseEntity<String> initiateChat(@RequestBody ChatMessageRequest requestDto, HttpServletRequest request) {
+    public ResponseEntity<ChatSessionDto> initiateChat(@RequestBody ChatMessageRequest requestDto, HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
-        Optional<ChatSessionDto> chatSession = chatService.initiateChat(requestDto, token); // "Bearer " 제거
-        // ChatSessionId 반환
-        // 요청 보냈을 때의 경우
-        return chatSession.map(chatSessionDto -> ResponseEntity.ok(chatSessionDto.getId()))
-            .orElseGet(() -> ResponseEntity.status(HttpStatus.CREATED).build());
+
+        ChatSessionDto chatSession = chatService.initiateChat(requestDto, token); // "Bearer " 제거
+
+        if (chatSession != null) {
+            return ResponseEntity.ok(chatSession); // ChatSessionDto가 있는 경우 반환
+        } else {
+            // 요청을 보낸 경우에는 204 No Content 또는 다른 적절한 응답을 반환할 수 있습니다.
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // 요청을 보냈지만 세션이 없을 경우
+        }
+
     }
 
 }
