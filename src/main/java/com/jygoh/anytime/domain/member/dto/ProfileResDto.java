@@ -15,7 +15,7 @@ public class ProfileResDto {
     private InfoWrapper<String> profileImgUrl; // profileImgUrl을 InfoWrapper로 감싸기
     private InfoWrapper<Integer> followingCount; // followingCount을 InfoWrapper로 감싸기
     private InfoWrapper<Integer> followerCount; // followerCount을 InfoWrapper로 감싸기
-    private List<PostSummaryDto> posts;
+    private InfoWrapper<List<PostSummaryDto>> posts; // posts를 InfoWrapper로 감싸기
     private boolean isOwner;
     private boolean isPrivate;
     private boolean isMutualFollow;
@@ -25,7 +25,7 @@ public class ProfileResDto {
     @Builder
     public ProfileResDto(String profileId, InfoWrapper<String> nickname,
         InfoWrapper<String> profileImgUrl, InfoWrapper<Integer> followingCount,
-        InfoWrapper<Integer> followerCount, List<PostSummaryDto> posts, boolean isOwner, boolean isPrivate,
+        InfoWrapper<Integer> followerCount, InfoWrapper<List<PostSummaryDto>> posts, boolean isOwner, boolean isPrivate,
         boolean isMutualFollow, boolean canSendMessage, InfoWrapper<Integer> postCount) {
         this.profileId = profileId;
         this.nickname = nickname;

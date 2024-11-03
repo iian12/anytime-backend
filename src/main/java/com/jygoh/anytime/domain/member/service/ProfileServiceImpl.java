@@ -6,6 +6,7 @@ import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.domain.post.dto.PostSummaryDto;
 import com.jygoh.anytime.domain.post.repository.PostRepository;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,7 @@ public class ProfileServiceImpl implements ProfileService {
         ProfileResDto.InfoWrapper<Integer> followingCountInfo;
         ProfileResDto.InfoWrapper<Integer> followerCountInfo;
         ProfileResDto.InfoWrapper<Integer> postCountInfo;
+        ProfileResDto.InfoWrapper<List<PostSummaryDto>> postsInfo;
 
         boolean isFollower = member.getFollowerRelations().stream()
             .anyMatch(follow -> follow.getFollower().getId().equals(requesterId));
@@ -58,9 +60,11 @@ public class ProfileServiceImpl implements ProfileService {
                 post -> PostSummaryDto.builder().id(post.getId()).thumbnail(post.getThumbnail())
                     .build()).toList();
 
+            postsInfo = new ProfileResDto.InfoWrapper<>(posts, false);
+
             return ProfileResDto.builder().profileId(member.getProfileId()).nickname(nicknameInfo)
                 .profileImgUrl(profileImgUrlInfo).followingCount(followingCountInfo)
-                .followerCount(followerCountInfo).posts(posts).isOwner(false).isPrivate(false)
+                .followerCount(followerCountInfo).posts(postsInfo).isOwner(false).isPrivate(false)
                 .isMutualFollow(isMutualFollow).canSendMessage(canSendMessage)
                 .postCount(postCountInfo).build();
 
@@ -76,13 +80,15 @@ public class ProfileServiceImpl implements ProfileService {
                 post -> PostSummaryDto.builder().id(post.getId()).thumbnail(post.getThumbnail())
                     .build()).toList();
 
+            postsInfo = new ProfileResDto.InfoWrapper<>(posts, false);
+
             return ProfileResDto.builder()
                 .profileId(member.getProfileId())
                 .nickname(nicknameInfo)
                 .profileImgUrl(profileImgUrlInfo)
                 .followingCount(followingCountInfo)
                 .followerCount(followerCountInfo)
-                .posts(posts)
+                .posts(postsInfo)
                 .isOwner(requesterId.equals(member.getId()))
                 .isPrivate(false)
                 .isMutualFollow(isMutualFollow)
@@ -104,6 +110,7 @@ public class ProfileServiceImpl implements ProfileService {
                 !member.showFollowerCount());
             postCountInfo = new ProfileResDto.InfoWrapper<>(
                 member.showPostCount() ? member.getPostCount() : null, !member.showPostCount());
+            postsInfo = new ProfileResDto.InfoWrapper<>(new ArrayList<>(), true); // 빈 리스트 및 private 설정
 
             return ProfileResDto.builder()
                 .profileId(member.getProfileId())
@@ -111,6 +118,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .profileImgUrl(profileImgUrlInfo)
                 .followingCount(followingCountInfo)
                 .followerCount(followerCountInfo)
+                .posts(postsInfo)
                 .isOwner(false)
                 .isPrivate(true)
                 .isMutualFollow(isMutualFollow)
