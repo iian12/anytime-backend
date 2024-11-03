@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface BookmarkService {
 
-    boolean toggleBookmark(Long postId, CategoryReqDto requestDto, String token);
+    boolean toggleBookmark(String postId, CategoryReqDto requestDto, String token);
 
     List<PostSummaryDto> getBookmarkedPostsByCategory(CategoryReqDto requestDto, String token);
 }

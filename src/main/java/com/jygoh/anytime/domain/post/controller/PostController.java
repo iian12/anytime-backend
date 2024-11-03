@@ -42,21 +42,21 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<PostDetailDto> getPostDetail(@PathVariable("postId") Long postId) {
+    public ResponseEntity<PostDetailDto> getPostDetail(@PathVariable("postId") String postId) {
         PostDetailDto postDetail = postService.getPostDetail(postId);
         return ResponseEntity.ok(postDetail);
     }
 
     @PostMapping
-    public ResponseEntity<Long> createPost(@RequestBody PostCreateRequestDto requestDto,
+    public ResponseEntity<String> createPost(@RequestBody PostCreateRequestDto requestDto,
         HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
-        Long createPost = postService.createPost(requestDto, token);
+        String createPost = postService.createPost(requestDto, token);
         return ResponseEntity.status(HttpStatus.CREATED).body(createPost);
     }
 
     @PostMapping("/{postId}/like")
-    public ResponseEntity<String> toggleLike(@PathVariable Long postId,
+    public ResponseEntity<String> toggleLike(@PathVariable String postId,
         HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
         boolean liked = postService.toggleLike(postId, token);
@@ -64,7 +64,7 @@ public class PostController {
     }
 
     @PostMapping("/bookmarks/{postId}")
-    public ResponseEntity<String> toggleBookmark(@PathVariable Long postId,
+    public ResponseEntity<String> toggleBookmark(@PathVariable String postId,
         @RequestBody CategoryReqDto requestDto, HttpServletRequest request) {
         String token = TokenUtils.extractTokenFromRequest(request);
         boolean isBookmarked = bookmarkService.toggleBookmark(postId, requestDto, token);

@@ -14,6 +14,7 @@ import com.jygoh.anytime.domain.post.model.PostHashtag;
 import com.jygoh.anytime.domain.post.repository.PostRepository;
 import com.jygoh.anytime.domain.usertag.model.UserTag;
 import com.jygoh.anytime.domain.usertag.service.UserTagService;
+import com.jygoh.anytime.global.security.utils.EncodeDecode;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,15 +55,15 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostDetailDto getPostDetail(Long postId) {
-        Post post = postRepository.findById(postId)
+    public PostDetailDto getPostDetail(String postId) {
+        Post post = postRepository.findById(EncodeDecode.decode(postId))
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
         post.incrementViewCount();
         return new PostDetailDto(post);
     }
 
     @Override
-    public Long createPost(PostCreateRequestDto requestDto, String token) {
+    public String createPost(PostCreateRequestDto requestDto, String token) {
         Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
@@ -96,15 +97,15 @@ public class PostServiceImpl implements PostService {
         List<UserTag> userTags = userTagService.createUserTags(requestDto.getUserTags(), post);
         post.addDetails(postHashtags, userTags);
 
-        return post.getId();
+        return EncodeDecode.encode(post.getId());
     }
 
     @Override
-    public boolean toggleLike(Long postId, String token) {
+    public boolean toggleLike(String postId, String token) {
         Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findById(EncodeDecode.decode(postId))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Post"));
 
         Optional<Like> existingLike = likeRepository.findByMemberAndPost(member, post);

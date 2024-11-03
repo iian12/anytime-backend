@@ -1,4 +1,4 @@
-package com.jygoh.anytime.global.security.jwt.utils;
+package com.jygoh.anytime.global.security.utils;
 
 import java.util.Base64;
 import javax.crypto.Cipher;

@@ -11,9 +11,9 @@ public interface PostService {
 
     Page<PostSummaryDto> getPostList(Pageable pageable);
 
-    PostDetailDto getPostDetail(Long postId);
+    PostDetailDto getPostDetail(String postId);
 
-    Long createPost(PostCreateRequestDto requestDto, String token);
+    String createPost(PostCreateRequestDto requestDto, String token);
 
-    boolean toggleLike(Long postId, String token);
+    boolean toggleLike(String postId, String token);
 }

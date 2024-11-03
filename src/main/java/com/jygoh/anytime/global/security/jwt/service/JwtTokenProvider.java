@@ -1,6 +1,6 @@
 package com.jygoh.anytime.global.security.jwt.service;
 
-import com.jygoh.anytime.global.security.jwt.utils.EncryptionUtils;
+import com.jygoh.anytime.global.security.utils.EncryptionUtils;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;

@@ -10,6 +10,7 @@ import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.domain.post.dto.PostSummaryDto;
 import com.jygoh.anytime.domain.post.model.Post;
 import com.jygoh.anytime.domain.post.repository.PostRepository;
+import com.jygoh.anytime.global.security.utils.EncodeDecode;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import java.util.List;
 import java.util.Optional;
@@ -36,10 +37,10 @@ public class BookmarkServiceImpl implements BookmarkService {
 
 
     @Override
-    public boolean toggleBookmark(Long postId, CategoryReqDto requestDto, String token) {
+    public boolean toggleBookmark(String postId, CategoryReqDto requestDto, String token) {
         Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findById(EncodeDecode.decode(postId))
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
         BookmarkCategory category = categoryRepository.findById(requestDto.getCategoryId())
             .orElseGet(() -> {

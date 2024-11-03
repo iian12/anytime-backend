@@ -23,15 +23,12 @@ public class GroupChat {
 
     private String chatName;
 
-    private String description;
-
     @OneToMany(mappedBy = "groupChat")
     private List<MemberGroupChat> memberGroupChats = new ArrayList<>();
 
     @Builder
-    public GroupChat(String chatName, String description, List<MemberGroupChat> memberGroupChats) {
+    public GroupChat(String chatName, List<MemberGroupChat> memberGroupChats) {
         this.chatName = chatName;
-        this.description = description;
         this.memberGroupChats = memberGroupChats != null ? memberGroupChats : new ArrayList<>();
     }
 
@@ -39,7 +36,4 @@ public class GroupChat {
         this.chatName = newChatName;
     }
 
-    public void updateDescription(String newDescription) {
-        this.description = newDescription;
-    }
 }
