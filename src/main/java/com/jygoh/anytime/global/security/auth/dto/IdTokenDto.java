@@ -1,9 +1,8 @@
-package com.jygoh.anytime.global.security.auth;
+package com.jygoh.anytime.global.security.auth.dto;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
 @NoArgsConstructor

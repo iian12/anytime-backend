@@ -1,14 +1,14 @@
-package com.jygoh.anytime.global.security.auth;
+package com.jygoh.anytime.global.security.auth.service;
 
 import com.jygoh.anytime.domain.member.dto.LoginReqDto;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
-import com.jygoh.anytime.global.security.jwt.JwtTokenProvider;
-import com.jygoh.anytime.global.security.jwt.NewAccessTokenResDto;
-import com.jygoh.anytime.global.security.jwt.RefreshToken;
-import com.jygoh.anytime.global.security.jwt.RefreshTokenRepository;
-import com.jygoh.anytime.global.security.jwt.TokenResponseDto;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.service.JwtTokenProvider;
+import com.jygoh.anytime.global.security.jwt.dto.NewAccessTokenResDto;
+import com.jygoh.anytime.global.security.jwt.model.RefreshToken;
+import com.jygoh.anytime.global.security.jwt.repository.RefreshTokenRepository;
+import com.jygoh.anytime.global.security.jwt.dto.TokenResponseDto;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,16 +22,16 @@ public class AuthServiceImpl implements AuthService {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final MemberRepository memberRepository;
+    private final MemberRepository memberService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
 
     public AuthServiceImpl(JwtTokenProvider jwtTokenProvider,
-        RefreshTokenRepository refreshTokenRepository, MemberRepository memberRepository,
+        RefreshTokenRepository refreshTokenRepository, MemberRepository memberService,
         BCryptPasswordEncoder passwordEncoder, UserDetailsService userDetailsService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenRepository = refreshTokenRepository;
-        this.memberRepository = memberRepository;
+        this.memberService = memberService;
         this.passwordEncoder = passwordEncoder;
         this.userDetailsService = userDetailsService;
     }
@@ -39,7 +39,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenResponseDto login(LoginReqDto reqDto) {
         // 사용자 존재 여부 확인
-        Member member = memberRepository.findByEmail(reqDto.getEmail())
+        Member member = memberService.findByEmail(reqDto.getEmail())
             .orElseThrow(() -> new BadCredentialsException("ID 또는 비밀번호가 잘못되었습니다."));
 
         // 사용자 정보 로드

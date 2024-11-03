@@ -1,6 +1,8 @@
-package com.jygoh.anytime.global.security.jwt;
+package com.jygoh.anytime.global.security.jwt.filter;
 
-import com.jygoh.anytime.global.security.auth.CustomUserDetailsService;
+import com.jygoh.anytime.global.security.auth.service.CustomUserDetailsService;
+import com.jygoh.anytime.global.security.jwt.service.JwtTokenProvider;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +31,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
         if ((path.startsWith("/api/v1/posts/") && method.equals("GET")) ||
-            path.startsWith("/images") || path.startsWith("/api/v1/auth/google")) {
+            path.startsWith("/images") || path.startsWith("/api/v1/auth/google") || path.startsWith("/api/ws")) {
             filterChain.doFilter(request, response);  // 필터 통과 (바로 다음 필터로 이동)
             return;
         }

@@ -3,7 +3,7 @@ package com.jygoh.anytime.domain.member.controller;
 import com.jygoh.anytime.domain.member.dto.ProfileIdReqDto;
 import com.jygoh.anytime.domain.member.dto.ProfileResDto;
 import com.jygoh.anytime.domain.member.service.ProfileService;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

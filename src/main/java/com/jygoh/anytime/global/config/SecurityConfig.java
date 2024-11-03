@@ -1,12 +1,12 @@
 package com.jygoh.anytime.global.config;
 
-import com.jygoh.anytime.global.exception.CustomAccessDeniedHandler;
-import com.jygoh.anytime.global.exception.JwtAuthenticationEntryPoint;
-import com.jygoh.anytime.global.security.auth.CustomOAuth2SuccessHandler;
-import com.jygoh.anytime.global.security.auth.CustomOAuth2UserService;
-import com.jygoh.anytime.global.security.auth.CustomUserDetailsService;
-import com.jygoh.anytime.global.security.jwt.JwtTokenFilter;
-import com.jygoh.anytime.global.security.jwt.JwtTokenProvider;
+import com.jygoh.anytime.global.handler.CustomAccessDeniedHandler;
+import com.jygoh.anytime.global.handler.JwtAuthenticationEntryPoint;
+import com.jygoh.anytime.global.handler.CustomOAuth2SuccessHandler;
+import com.jygoh.anytime.global.security.auth.service.CustomOAuth2UserService;
+import com.jygoh.anytime.global.security.auth.service.CustomUserDetailsService;
+import com.jygoh.anytime.global.security.jwt.filter.JwtTokenFilter;
+import com.jygoh.anytime.global.security.jwt.service.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -40,6 +40,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(
                 authorizeRequests -> authorizeRequests.requestMatchers("/api/v1/auth/**").permitAll()
                     .requestMatchers("/api/v1/member/register").permitAll()
+                    .requestMatchers("/api/ws/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                     .requestMatchers("/rss/**").permitAll().requestMatchers("/login/**").permitAll()

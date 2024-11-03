@@ -7,7 +7,7 @@ import com.jygoh.anytime.domain.hashtag.repository.HashtagFollowerRepository;
 import com.jygoh.anytime.domain.hashtag.repository.HashtagRepository;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -19,19 +19,19 @@ public class HashtagFollowServiceImpl implements HashtagFollowService {
 
     private final HashtagFollowerRepository hashtagFollowerRepository;
     private final HashtagRepository hashtagRepository;
-    private final MemberRepository memberRepository;
+    private final MemberRepository memberService;
 
     public HashtagFollowServiceImpl(HashtagFollowerRepository hashtagFollowerRepository,
-        HashtagRepository hashtagRepository, MemberRepository memberRepository) {
+        HashtagRepository hashtagRepository, MemberRepository memberService) {
         this.hashtagFollowerRepository = hashtagFollowerRepository;
         this.hashtagRepository = hashtagRepository;
-        this.memberRepository = memberRepository;
+        this.memberService = memberService;
     }
 
 
     @Override
     public boolean toggleFollowHashtag(Long hashtagId, String token) {
-        Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+        Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
         Hashtag hashtag = hashtagRepository.findById(hashtagId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Hashtag"));
@@ -48,7 +48,7 @@ public class HashtagFollowServiceImpl implements HashtagFollowService {
 
     @Override
     public List<HashtagDto> getFollowedHashtag(String token) {
-        Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+        Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
         return hashtagFollowerRepository.findAllByMember(member).stream()

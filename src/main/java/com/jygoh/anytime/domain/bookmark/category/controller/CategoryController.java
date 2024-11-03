@@ -2,7 +2,7 @@ package com.jygoh.anytime.domain.bookmark.category.controller;
 
 import com.jygoh.anytime.domain.bookmark.category.dto.CategoryResDto;
 import com.jygoh.anytime.domain.bookmark.category.service.CategoryService;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import org.springframework.http.ResponseEntity;

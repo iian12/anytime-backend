@@ -2,7 +2,7 @@ package com.jygoh.anytime.domain.hashtag.controller;
 
 import com.jygoh.anytime.domain.hashtag.dto.HashtagDto;
 import com.jygoh.anytime.domain.hashtag.service.HashtagFollowService;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import org.springframework.http.ResponseEntity;

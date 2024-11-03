@@ -4,6 +4,7 @@ import com.jygoh.anytime.domain.chat.model.MemberGroupChat;
 import com.jygoh.anytime.domain.follow.model.Follow;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -60,8 +61,11 @@ public class Member {
     @Column(unique = true)
     private String subjectId;
 
+    @ElementCollection
+    private List<Long> chatRoomIds;
+
     @OneToMany(mappedBy = "member")
-    private List<MemberGroupChat> memberGroupChats = new ArrayList<>();
+    private List<MemberGroupChat> memberGroupChats;
 
     private boolean showNickname;
     private boolean showProfileImage;
@@ -72,7 +76,7 @@ public class Member {
     @Builder(toBuilder = true)
     public Member(String email, String profileId, String password, String nickname, boolean isSignUpComplete,
         boolean isPrivate, int followingCount, List<Follow> followingRelations, int followerCount,
-        List<Follow> followerRelations, String profileImageUrl, int postCount, String providerId, String subjectId,
+        List<Follow> followerRelations, String profileImageUrl, int postCount, String providerId, String subjectId, List<Long> chatRoomIds,
         List<MemberGroupChat> memberGroupChats) {
         this.email = email;
         this.profileId = profileId;
@@ -89,6 +93,7 @@ public class Member {
         this.postCount = postCount;
         this.providerId = providerId;
         this.subjectId = subjectId;
+        this.chatRoomIds = chatRoomIds != null ? chatRoomIds : new ArrayList<>();
         this.memberGroupChats = memberGroupChats != null ? memberGroupChats : new ArrayList<>();
         // 기본값 설정
         this.showNickname = true;

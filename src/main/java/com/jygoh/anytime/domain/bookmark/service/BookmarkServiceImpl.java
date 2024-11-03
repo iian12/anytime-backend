@@ -10,10 +10,9 @@ import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.domain.post.dto.PostSummaryDto;
 import com.jygoh.anytime.domain.post.model.Post;
 import com.jygoh.anytime.domain.post.repository.PostRepository;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,15 +21,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookmarkServiceImpl implements BookmarkService {
 
     private final BookmarkRepository bookmarkRepository;
-    private final MemberRepository memberRepository;
+    private final MemberRepository memberService;
     private final PostRepository postRepository;
     private final CategoryRepository categoryRepository;
 
     public BookmarkServiceImpl(BookmarkRepository bookmarkRepository,
-        MemberRepository memberRepository, PostRepository postRepository,
+        MemberRepository memberService, PostRepository postRepository,
         CategoryRepository categoryRepository) {
         this.bookmarkRepository = bookmarkRepository;
-        this.memberRepository = memberRepository;
+        this.memberService = memberService;
         this.postRepository = postRepository;
         this.categoryRepository = categoryRepository;
     }
@@ -38,7 +37,7 @@ public class BookmarkServiceImpl implements BookmarkService {
 
     @Override
     public boolean toggleBookmark(Long postId, CategoryReqDto requestDto, String token) {
-        Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+        Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
@@ -68,7 +67,7 @@ public class BookmarkServiceImpl implements BookmarkService {
     @Override
     public List<PostSummaryDto> getBookmarkedPostsByCategory(CategoryReqDto requestDto,
         String token) {
-        Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+        Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
         BookmarkCategory category = categoryRepository.findById(requestDto.getCategoryId())

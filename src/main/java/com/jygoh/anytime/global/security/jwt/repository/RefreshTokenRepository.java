@@ -1,5 +1,6 @@
-package com.jygoh.anytime.global.security.jwt;
+package com.jygoh.anytime.global.security.jwt.repository;
 
+import com.jygoh.anytime.global.security.jwt.model.RefreshToken;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

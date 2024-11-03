@@ -1,4 +1,4 @@
-package com.jygoh.anytime.global.security.auth;
+package com.jygoh.anytime.global.security.auth.service;
 
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final MemberRepository memberRepository;
+    private final MemberRepository memberService;
 
-    public CustomOAuth2UserService(MemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
+    public CustomOAuth2UserService(MemberRepository memberService) {
+        this.memberService = memberService;
     }
 
     @Override
@@ -25,18 +25,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String providerId = getAttribute(oAuth2User, provider, "sub");
         String name = getAttribute(oAuth2User, provider, "name"); // 구글 프로필의 이름 가져오기
         // 기존 회원이 있는지 확인
-        Member member = memberRepository.findByEmail(email).map(existingMember -> {
+        Member member = memberService.findByEmail(email).map(existingMember -> {
             if (!existingMember.getProviderId().equals(providerId)) {
                 // 기존 회원의 providerId 업데이트
                 existingMember.updateProviderId(providerId);
-                memberRepository.save(existingMember);
+                memberService.save(existingMember);
             }
             return existingMember;
         }).orElseGet(() -> {
             // 신규 회원 생성
             Member newMember = Member.builder().email(email).nickname(name) // 구글 프로필의 이름으로 닉네임 설정
                 .profileImageUrl(profileImageUrl).providerId(providerId).build();
-            return memberRepository.save(newMember);
+            return memberService.save(newMember);
         });
         return new CustomUserDetail(oAuth2User, member.getId());
     }

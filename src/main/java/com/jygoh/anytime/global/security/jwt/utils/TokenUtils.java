@@ -1,4 +1,4 @@
-package com.jygoh.anytime.global.security.jwt;
+package com.jygoh.anytime.global.security.jwt.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

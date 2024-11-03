@@ -3,7 +3,7 @@ package com.jygoh.anytime.domain.follow.controller;
 import com.jygoh.anytime.domain.follow.service.FollowService;
 import com.jygoh.anytime.domain.member.dto.MemberSummaryDto;
 import com.jygoh.anytime.domain.member.dto.ProfileIdReqDto;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import org.springframework.http.ResponseEntity;

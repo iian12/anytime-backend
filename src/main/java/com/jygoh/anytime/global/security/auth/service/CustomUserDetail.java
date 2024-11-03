@@ -1,4 +1,4 @@
-package com.jygoh.anytime.global.security.auth;
+package com.jygoh.anytime.global.security.auth.service;
 
 import com.jygoh.anytime.domain.member.model.Member;
 import java.util.Collection;

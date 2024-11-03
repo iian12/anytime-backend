@@ -5,9 +5,9 @@ import com.jygoh.anytime.domain.member.dto.ProfileIdDto;
 import com.jygoh.anytime.domain.member.dto.RegisterReqDto;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
-import com.jygoh.anytime.global.security.jwt.EncryptionUtils;
-import com.jygoh.anytime.global.security.jwt.JwtTokenProvider;
-import com.jygoh.anytime.global.security.jwt.TokenResponseDto;
+import com.jygoh.anytime.global.security.jwt.utils.EncryptionUtils;
+import com.jygoh.anytime.global.security.jwt.service.JwtTokenProvider;
+import com.jygoh.anytime.global.security.jwt.dto.TokenResponseDto;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,28 +17,28 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional
-public class MemberServiceImpl implements MemberService {
+public class MemberServiceImpl implements com.jygoh.anytime.domain.member.service.MemberService {
 
-    private final MemberRepository memberRepository;
+    private final MemberRepository memberService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public MemberServiceImpl(MemberRepository memberRepository,
+    public MemberServiceImpl(MemberRepository memberService,
         BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider) {
-        this.memberRepository = memberRepository;
+        this.memberService = memberService;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Override
     public void register(RegisterReqDto reqDto) {
-        if (memberRepository.existsByEmail(reqDto.getEmail())) {
+        if (memberService.existsByEmail(reqDto.getEmail())) {
             throw new IllegalArgumentException("이미 사용 중인 사용자 이름입니다.");
         }
-        if (memberRepository.existsByEmail(reqDto.getEmail())) {
+        if (memberService.existsByEmail(reqDto.getEmail())) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
-        Optional<Member> existingMember = memberRepository.findByEmail(reqDto.getEmail());
+        Optional<Member> existingMember = memberService.findByEmail(reqDto.getEmail());
         if (existingMember.isPresent()) {
             Member member = existingMember.get();
             if (member.getProviderId() != null) {
@@ -48,12 +48,12 @@ public class MemberServiceImpl implements MemberService {
         }
         String encodedPassword = bCryptPasswordEncoder.encode(reqDto.getPassword());
         Member member = reqDto.toEntity().toBuilder().password(encodedPassword).build();
-        memberRepository.save(member);
+        memberService.save(member);
     }
 
     @Override
     public TokenResponseDto processingGoogleUser(GoogleUserDto dto) {
-        Optional<Member> optionalMember = memberRepository.findByEmail(dto.getEmail());
+        Optional<Member> optionalMember = memberService.findByEmail(dto.getEmail());
         TokenResponseDto tokenResponseDto = new TokenResponseDto();
 
         if (optionalMember.isPresent()) {
@@ -73,7 +73,7 @@ public class MemberServiceImpl implements MemberService {
                 .subjectId(dto.getSubjectId())
                 .build();
 
-            memberRepository.save(newMember);
+            memberService.save(newMember);
 
            try {
                String encodedMemberId = EncryptionUtils.encrypt(String.valueOf(newMember.getId()));
@@ -102,7 +102,7 @@ public class MemberServiceImpl implements MemberService {
         try {
             decodedMemberId = Long.parseLong(EncryptionUtils.decrypt(profileIdDto.getProfileId()));
 
-            Member member = memberRepository.findById(decodedMemberId)
+            Member member = memberService.findById(decodedMemberId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid MemberID"));
 
             member.updateProfileId(profileIdDto.getProfileId());
@@ -122,6 +122,6 @@ public class MemberServiceImpl implements MemberService {
     }
 
     private boolean isProfileIdAvailable(String profileId) {
-        return !memberRepository.existsByProfileId(profileId);
+        return !memberService.existsByProfileId(profileId);
     }
 }

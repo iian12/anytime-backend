@@ -1,7 +1,8 @@
-package com.jygoh.anytime.global.security.auth;
+package com.jygoh.anytime.global.handler;
 
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
-import com.jygoh.anytime.global.security.jwt.JwtTokenProvider;
+import com.jygoh.anytime.global.security.auth.service.CustomUserDetail;
+import com.jygoh.anytime.global.security.jwt.service.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,12 +15,12 @@ import org.springframework.stereotype.Component;
 public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final MemberRepository memberRepository;
+    private final MemberRepository memberService;
 
     public CustomOAuth2SuccessHandler(JwtTokenProvider jwtTokenProvider,
-        MemberRepository memberRepository) {
+        MemberRepository memberService) {
         this.jwtTokenProvider = jwtTokenProvider;
-        this.memberRepository = memberRepository;
+        this.memberService = memberService;
     }
 
     @Override

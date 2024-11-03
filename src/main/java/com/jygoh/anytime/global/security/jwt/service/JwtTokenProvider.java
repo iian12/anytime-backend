@@ -1,7 +1,6 @@
-package com.jygoh.anytime.global.security.jwt;
+package com.jygoh.anytime.global.security.jwt.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
+import com.jygoh.anytime.global.security.jwt.utils.EncryptionUtils;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -70,6 +69,13 @@ public class JwtTokenProvider {
             if (token == null || token.isEmpty()) {
                 return false;
             }
+
+            String bearerToken = token.trim();
+
+            if (!bearerToken.trim().isEmpty() && bearerToken.startsWith("Bearer ")) {
+                token = bearerToken.substring(7);
+            }
+
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (Exception e) {

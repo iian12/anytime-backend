@@ -15,11 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class UserTagServiceImpl implements UserTagService {
 
-    private final MemberRepository memberRepository;
+    private final MemberRepository memberService;
     private final UserTagRepository userTagRepository;
 
-    public UserTagServiceImpl(MemberRepository memberRepository, UserTagRepository userTagRepository) {
-        this.memberRepository = memberRepository;
+    public UserTagServiceImpl(MemberRepository memberService, UserTagRepository userTagRepository) {
+        this.memberService = memberService;
         this.userTagRepository = userTagRepository;
     }
 
@@ -31,7 +31,7 @@ public class UserTagServiceImpl implements UserTagService {
         }
 
         return userTags.stream().map(taggedUserProfileId -> {
-            Member taggedUser = memberRepository.findByProfileId(taggedUserProfileId)
+            Member taggedUser = memberService.findByProfileId(taggedUserProfileId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
 
             UserTag userTag = new UserTag(post, taggedUser);

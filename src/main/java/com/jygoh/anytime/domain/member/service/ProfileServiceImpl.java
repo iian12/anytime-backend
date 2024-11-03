@@ -5,7 +5,7 @@ import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.domain.post.dto.PostSummaryDto;
 import com.jygoh.anytime.domain.post.repository.PostRepository;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,22 +14,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ProfileServiceImpl implements ProfileService {
 
-    private final MemberRepository memberRepository;
+    private final MemberRepository memberService;
     private final PostRepository postRepository;
 
-    public ProfileServiceImpl(MemberRepository memberRepository, PostRepository postRepository) {
-        this.memberRepository = memberRepository;
+    public ProfileServiceImpl(MemberRepository memberService, PostRepository postRepository) {
+        this.memberService = memberService;
         this.postRepository = postRepository;
     }
 
     @Override
     public ProfileResDto getProfile(String profileId, String token) {
-        Member member = memberRepository.findByProfileId(profileId)
+        Member member = memberService.findByProfileId(profileId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid ProfileId"));
 
         Long requesterId = TokenUtils.getMemberIdFromToken(token);
 
-        Member requester = memberRepository.findById(requesterId)
+        Member requester = memberService.findById(requesterId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
         ProfileResDto.InfoWrapper<String> nicknameInfo;

@@ -1,4 +1,4 @@
-package com.jygoh.anytime.global.exception;
+package com.jygoh.anytime.global.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

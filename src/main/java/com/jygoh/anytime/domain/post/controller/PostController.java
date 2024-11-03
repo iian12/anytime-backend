@@ -6,7 +6,7 @@ import com.jygoh.anytime.domain.post.dto.PostCreateRequestDto;
 import com.jygoh.anytime.domain.post.dto.PostDetailDto;
 import com.jygoh.anytime.domain.post.dto.PostSummaryDto;
 import com.jygoh.anytime.domain.post.service.PostService;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

@@ -1,4 +1,4 @@
-package com.jygoh.anytime.global.security.jwt;
+package com.jygoh.anytime.global.security.jwt.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -1,4 +1,4 @@
-package com.jygoh.anytime.global.security.auth;
+package com.jygoh.anytime.global.security.auth.controller;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -11,7 +11,9 @@ import com.jygoh.anytime.domain.member.dto.LoginReqDto;
 import com.jygoh.anytime.domain.member.dto.ProfileIdDto;
 import com.jygoh.anytime.domain.member.dto.RegisterReqDto;
 import com.jygoh.anytime.domain.member.service.MemberService;
-import com.jygoh.anytime.global.security.jwt.TokenResponseDto;
+import com.jygoh.anytime.global.security.auth.service.AuthService;
+import com.jygoh.anytime.global.security.auth.dto.IdTokenDto;
+import com.jygoh.anytime.global.security.jwt.dto.TokenResponseDto;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.GeneralSecurityException;

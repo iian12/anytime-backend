@@ -14,7 +14,7 @@ import com.jygoh.anytime.domain.post.model.PostHashtag;
 import com.jygoh.anytime.domain.post.repository.PostRepository;
 import com.jygoh.anytime.domain.usertag.model.UserTag;
 import com.jygoh.anytime.domain.usertag.service.UserTagService;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,17 +30,17 @@ import org.springframework.web.multipart.MultipartFile;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
-    private final MemberRepository memberRepository;
+    private final MemberRepository memberService;
     private final HashtagService hashtagService;
     private final UserTagService userTagService;
     private final LikeRepository likeRepository;
     private final MediaService mediaService;
 
-    public PostServiceImpl(PostRepository postRepository, MemberRepository memberRepository,
+    public PostServiceImpl(PostRepository postRepository, MemberRepository memberService,
         HashtagService hashtagService, UserTagService userTagService, LikeRepository likeRepository,
         MediaService mediaService) {
         this.postRepository = postRepository;
-        this.memberRepository = memberRepository;
+        this.memberService = memberService;
         this.hashtagService = hashtagService;
         this.userTagService = userTagService;
         this.likeRepository = likeRepository;
@@ -63,7 +63,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Long createPost(PostCreateRequestDto requestDto, String token) {
-        Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+        Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
         List<String> permanentMediaUrls = new ArrayList<>();
@@ -101,7 +101,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public boolean toggleLike(Long postId, String token) {
-        Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+        Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
         Post post = postRepository.findById(postId)

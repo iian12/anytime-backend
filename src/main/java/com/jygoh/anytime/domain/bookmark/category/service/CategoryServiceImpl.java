@@ -6,7 +6,7 @@ import com.jygoh.anytime.domain.bookmark.category.model.BookmarkCategory;
 import com.jygoh.anytime.domain.bookmark.category.repository.CategoryRepository;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
-import com.jygoh.anytime.global.security.jwt.TokenUtils;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -17,17 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final MemberRepository memberRepository;
+    private final MemberRepository memberService;
 
     public CategoryServiceImpl(CategoryRepository categoryRepository,
-        MemberRepository memberRepository) {
+        MemberRepository memberService) {
         this.categoryRepository = categoryRepository;
-        this.memberRepository = memberRepository;
+        this.memberService = memberService;
     }
 
     @Override
     public List<CategoryResDto> getCategoriesByMember(String token) {
-        Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+        Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
         return categoryRepository.findAllByMember(member)
             .stream()
@@ -39,7 +39,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Long createCategory(CreateCategoryReqDto requestDto, String token) {
-        Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+        Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
         BookmarkCategory category = BookmarkCategory.builder()
