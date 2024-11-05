@@ -2,6 +2,7 @@ package com.jygoh.anytime.domain.media.controller;
 
 import com.jygoh.anytime.domain.media.service.MediaService;
 import java.io.IOException;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +32,18 @@ public class MediaController {
         } catch (UnsupportedOperationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body("지원되지 않는 파일 형식입니다. " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/upload/multiple")
+    public ResponseEntity<List<String>> uploadMultipleMedia(@RequestParam("files") List<MultipartFile> files) {
+        try {
+            List<String> fileUrls = mediaService.uploadMultipleMedia(files);
+            return new ResponseEntity<>(fileUrls, HttpStatus.OK);
+        } catch (IOException e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }
 }
