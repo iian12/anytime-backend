@@ -8,6 +8,7 @@ import com.jygoh.anytime.domain.post.dto.PostSummaryDto;
 import com.jygoh.anytime.domain.post.service.PostService;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -33,11 +34,8 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<PostSummaryDto>> getPostList(
-        @RequestParam(defaultValue = "0") int page, // 페이지 번호 (기본값: 0)
-        @RequestParam(defaultValue = "10") int size // 페이지 크기 (기본값: 10)
-    ) {
-        Page<PostSummaryDto> postList = postService.getPostList(PageRequest.of(page, size));
+    public ResponseEntity<List<PostDetailDto>> getPostList() {
+        List<PostDetailDto> postList = postService.getPostListInMainPage();
         return ResponseEntity.ok(postList);
     }
 

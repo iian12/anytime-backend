@@ -19,11 +19,14 @@ public class ProfileServiceImpl implements ProfileService {
     private final MemberRepository memberService;
     private final PostRepository postRepository;
     private final BlockValidator blockValidator;
+    private final MemberRepository memberRepository;
 
-    public ProfileServiceImpl(MemberRepository memberService, PostRepository postRepository, BlockValidator blockValidator) {
+    public ProfileServiceImpl(MemberRepository memberService, PostRepository postRepository, BlockValidator blockValidator,
+        MemberRepository memberRepository) {
         this.memberService = memberService;
         this.postRepository = postRepository;
         this.blockValidator = blockValidator;
+        this.memberRepository = memberRepository;
     }
 
     @Override
@@ -130,5 +133,14 @@ public class ProfileServiceImpl implements ProfileService {
                 .postCount(postCountInfo)
                 .build();
         }
+    }
+
+    @Override
+    public String getMyProfileImgUrl(String token) {
+        Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+            .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
+
+
+        return member.getProfileImageUrl();
     }
 }

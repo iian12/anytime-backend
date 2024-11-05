@@ -1,6 +1,7 @@
 package com.jygoh.anytime.domain.chat.service;
 
 import com.jygoh.anytime.domain.chat.dto.ChatRoomResponse;
+import com.jygoh.anytime.domain.chat.dto.PrivateChatMessageRes;
 import com.jygoh.anytime.domain.chat.dto.PrivateChatResponse;
 import com.jygoh.anytime.domain.chat.dto.PrivateChatResponse.ChatStatus;
 import com.jygoh.anytime.domain.chat.dto.ReadReceipt;
@@ -20,6 +21,7 @@ import com.jygoh.anytime.global.security.jwt.utils.BlockValidator;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import com.jygoh.anytime.global.security.utils.EncodeDecode;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -161,5 +163,25 @@ public class ChatServiceImpl implements ChatService {
                 new ReadReceipt(messageId, true, message.getReadAt())
             );
         }
+    }
+
+    @Override
+    public List<PrivateChatMessageRes> getChatHistory(String chatRoomId, String token)
+        throws IllegalAccessException {
+        Long memberId = TokenUtils.getMemberIdFromToken(token);
+        Long decodedChatRoomId = encodeDecode.decode(chatRoomId);
+
+        PrivateChat chat = privateChatRepository.findById(decodedChatRoomId)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid Chat Room"));
+
+        if (!chat.getMember1().getId().equals(memberId) && !chat.getMember2().getId().equals(memberId)) {
+            throw new IllegalAccessException("Access Denied: You are not a member of this chat room");
+        }
+
+        List<PrivateChatMessage> messages = privateChatMessageRepository.findAllByChatId(decodedChatRoomId);
+
+        return messages.stream()
+            .map(message -> PrivateChatMessageRes.from(message, memberId))
+            .collect(Collectors.toList());
     }
 }

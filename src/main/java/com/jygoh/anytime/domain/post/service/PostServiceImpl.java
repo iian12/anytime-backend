@@ -63,6 +63,15 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public List<PostDetailDto> getPostListInMainPage() {
+        List<Post> posts = postRepository.findAll();
+
+            return posts.stream().map(post -> new PostDetailDto(post, encodeDecode.encode(post.getId())))
+                .toList();
+    }
+
+
+    @Override
     public PostDetailDto getPostDetail(String postId, String token) {
         Post post = postRepository.findById(encodeDecode.decode(postId))
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
@@ -75,7 +84,7 @@ public class PostServiceImpl implements PostService {
         }
 
         post.incrementViewCount();
-        return new PostDetailDto(post);
+        return new PostDetailDto(post, postId);
     }
 
     @Override

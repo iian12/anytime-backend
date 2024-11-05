@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PostDetailDto {
 
-    private Long id;
+    private String id;
     private String title;
     private String content;
     private String author;
@@ -19,8 +19,8 @@ public class PostDetailDto {
     private int commentCount;
     private LocalDateTime createdAt;
 
-    public PostDetailDto(Post post) {
-        this.id = post.getId();
+    public PostDetailDto(Post post, String id) {
+        this.id = id;
         this.title = post.getTitle();
         this.content = post.getContent();
         this.author = post.getAuthor().getProfileId();

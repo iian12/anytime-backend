@@ -1,13 +1,9 @@
 package com.jygoh.anytime.domain.chat.service;
 
-import com.jygoh.anytime.domain.chat.dto.ChatMessageDto;
-import com.jygoh.anytime.domain.chat.dto.ChatMessageRequest;
 import com.jygoh.anytime.domain.chat.dto.ChatRoomResponse;
-import com.jygoh.anytime.domain.chat.dto.ChatSessionDto;
+import com.jygoh.anytime.domain.chat.dto.PrivateChatMessageRes;
 import com.jygoh.anytime.domain.chat.dto.PrivateChatResponse;
-import com.jygoh.anytime.domain.member.model.Member;
 import java.util.List;
-import java.util.Optional;
 
 public interface ChatService {
 
@@ -18,4 +14,7 @@ public interface ChatService {
     void sendMessage(String chatRoomId, String content, String token);
 
     void markMessageAsReadForPrivateChat(String messageId, String token);
+
+    List<PrivateChatMessageRes> getChatHistory(String chatRoomId, String token)
+        throws IllegalAccessException;
 }

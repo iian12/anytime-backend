@@ -27,4 +27,13 @@ public class ProfileController {
         ProfileResDto profileResDto = profileService.getProfile(requestDto.getProfileId(), token);
         return ResponseEntity.ok(profileResDto);
     }
+
+    @GetMapping("/img")
+    public ResponseEntity<String> getMyProfileImgUrl(HttpServletRequest request) {
+        String token = TokenUtils.extractTokenFromRequest(request);
+
+        String url = profileService.getMyProfileImgUrl(token);
+
+        return ResponseEntity.ok(url);
+    }
 }
