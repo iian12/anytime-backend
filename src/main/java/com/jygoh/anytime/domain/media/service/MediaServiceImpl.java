@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +37,27 @@ public class MediaServiceImpl implements MediaService {
         file.transferTo(filePath);
 
         return "http://localhost:8080/media/temp/" + fileName;
+    }
+
+    @Override
+    public List<String> uploadMultipleMedia(List<MultipartFile> files) throws IOException {
+        List<String> fileUrls = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            String extension = getFileExtension(file.getOriginalFilename());
+            boolean isSupportedType = isSupportedFileType(extension);
+            if (extension.isEmpty() || !isSupportedType) {
+                throw new IllegalArgumentException("지원되지 않는 미디어입니다.");
+            }
+            String fileName = UUID.randomUUID() + extension;
+            Path filePath = Paths.get(tempUploadDir +File.separator + fileName);
+            Files.createDirectories(filePath.getParent());
+            file.transferTo(filePath);
+
+            fileUrls.add("http://localhost:8080/media.temp/" + fileName);
+
+        }
+        return fileUrls;
     }
 
 

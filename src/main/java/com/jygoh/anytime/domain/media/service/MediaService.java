@@ -9,6 +9,7 @@ public interface MediaService {
 
     String uploadOneMedia(MultipartFile file) throws IOException;
 
+    List<String> uploadMultipleMedia(List<MultipartFile> files) throws IOException;
 
     String uploadAdjustedMedia(MultipartFile multipartFile) throws IOException;
 }
