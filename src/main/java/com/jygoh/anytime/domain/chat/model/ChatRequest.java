@@ -32,17 +32,13 @@ public class ChatRequest {
     @JoinColumn(name = "target_id", nullable = false)
     private Member target;
 
-    @Column(nullable = false)
-    private String messageContent;
-
     @Enumerated(EnumType.STRING)
     private RequestStatus status; // 요청 상태 추가
 
     @Builder
-    public ChatRequest(Member requester, Member target, String messageContent) {
+    public ChatRequest(Member requester, Member target) {
         this.requester = requester;
         this.target = target;
-        this.messageContent = messageContent;
         this.status = RequestStatus.PENDING; // 기본 상태: 대기 중
     }
 
@@ -54,9 +50,14 @@ public class ChatRequest {
         this.status = RequestStatus.REJECTED; // 거절 상태로 변경
     }
 
+    public void unReject() {
+        this.status = RequestStatus.UNREJECTED;
+    }
+
     public enum RequestStatus {
         PENDING, // 대기 중
         ACCEPTED, // 수락됨
-        REJECTED // 거절됨
+        REJECTED,
+        UNREJECTED// 거절됨
     }
 }

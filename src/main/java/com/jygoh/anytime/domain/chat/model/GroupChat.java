@@ -1,9 +1,10 @@
 package com.jygoh.anytime.domain.chat.model;
 
+import com.jygoh.anytime.domain.member.model.Member;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,25 +16,37 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class GroupChat {
+@DiscriminatorValue("GROUP")
+public class GroupChat extends Chat {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false)
+    private String title;
 
-    private String chatName;
+    @OneToMany(mappedBy = "groupChat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GroupChatMember> members = new ArrayList<>();
 
-    @OneToMany(mappedBy = "groupChat")
-    private List<MemberGroupChat> memberGroupChats = new ArrayList<>();
+    @OneToMany(mappedBy = "groupChat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GroupChatMessage> messages = new ArrayList<>();
 
     @Builder
-    public GroupChat(String chatName, List<MemberGroupChat> memberGroupChats) {
-        this.chatName = chatName;
-        this.memberGroupChats = memberGroupChats != null ? memberGroupChats : new ArrayList<>();
+    public GroupChat(String title) {
+        super();
+        this.title = title;
     }
 
-    public void updateChatName(String newChatName) {
-        this.chatName = newChatName;
+    public void addMember(GroupChatMember member) {
+        members.add(member);
     }
 
+    public void addMessage(GroupChatMessage message) {
+        messages.add(message);
+    }
+
+    public void markMessageAsRead(GroupChatMessage message, Member member) {
+        GroupChatMember groupChatMember = members.stream()
+            .filter(m -> m.getMember().equals(member))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("해당 멤버가 채팅에 존재하지 않습니다."));
+        groupChatMember.markMessageAsRead(message);
+    }
 }

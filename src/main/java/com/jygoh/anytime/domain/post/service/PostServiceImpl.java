@@ -14,6 +14,7 @@ import com.jygoh.anytime.domain.post.model.PostHashtag;
 import com.jygoh.anytime.domain.post.repository.PostRepository;
 import com.jygoh.anytime.domain.usertag.model.UserTag;
 import com.jygoh.anytime.domain.usertag.service.UserTagService;
+import com.jygoh.anytime.global.security.jwt.utils.BlockValidator;
 import com.jygoh.anytime.global.security.utils.EncodeDecode;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import java.io.IOException;
@@ -36,18 +37,23 @@ public class PostServiceImpl implements PostService {
     private final UserTagService userTagService;
     private final LikeRepository likeRepository;
     private final MediaService mediaService;
+    private final BlockValidator blockValidator;
     private final EncodeDecode encodeDecode;
+    private final MemberRepository memberRepository;
 
     public PostServiceImpl(PostRepository postRepository, MemberRepository memberService,
         HashtagService hashtagService, UserTagService userTagService, LikeRepository likeRepository,
-        MediaService mediaService, EncodeDecode encodeDecode) {
+        MediaService mediaService,BlockValidator blockValidator, EncodeDecode encodeDecode,
+        MemberRepository memberRepository) {
         this.postRepository = postRepository;
         this.memberService = memberService;
         this.hashtagService = hashtagService;
         this.userTagService = userTagService;
         this.likeRepository = likeRepository;
         this.mediaService = mediaService;
+        this.blockValidator = blockValidator;
         this.encodeDecode = encodeDecode;
+        this.memberRepository = memberRepository;
     }
 
     @Override
@@ -57,9 +63,17 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostDetailDto getPostDetail(String postId) {
+    public PostDetailDto getPostDetail(String postId, String token) {
         Post post = postRepository.findById(encodeDecode.decode(postId))
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
+        if (token != null) {
+            Member requester = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+            blockValidator.validateNotBlocked(requester, post.getAuthor());
+        }
+
         post.incrementViewCount();
         return new PostDetailDto(post);
     }
@@ -104,20 +118,22 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public boolean toggleLike(String postId, String token) {
-        Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
+        Member requester = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
         Post post = postRepository.findById(encodeDecode.decode(postId))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Post"));
 
-        Optional<Like> existingLike = likeRepository.findByMemberAndPost(member, post);
+        blockValidator.validateNotBlocked(requester, post.getAuthor());
+
+        Optional<Like> existingLike = likeRepository.findByMemberAndPost(requester, post);
 
         if (existingLike.isPresent()) {
             likeRepository.delete(existingLike.get());
             post.decrementLikeCount();
             return false;
         } else {
-            likeRepository.save(new Like(member, post));
+            likeRepository.save(new Like(requester, post));
             post.incrementLikeCount();
             return true;
         }

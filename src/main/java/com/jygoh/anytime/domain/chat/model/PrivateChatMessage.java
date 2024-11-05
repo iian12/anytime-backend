@@ -3,6 +3,8 @@ package com.jygoh.anytime.domain.chat.model;
 import com.jygoh.anytime.domain.member.model.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,55 +15,45 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatMessage {
+public class PrivateChatMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Setter
     @ManyToOne
-    @JoinColumn(name = "member_chat_id", nullable = false)
-    private MemberChat memberChat;
+    @JoinColumn(name = "chat_id", nullable = false)
+    private PrivateChat chat;
 
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
     private Member sender;
 
-    @Column(nullable = false)
+    @Column
     private String content;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private LocalDateTime timeStamp;
-
-    boolean isRead;
-
-    private boolean deletedByRequester;
-    private boolean deletedByTarget;
-
+    private MessageReadStatus readStatus;
+    private LocalDateTime sendAt;
+    private LocalDateTime readAt;
 
     @Builder
-    public ChatMessage(MemberChat memberChat, Member sender, String content) {
-        this.memberChat = memberChat;
+    public PrivateChatMessage(PrivateChat chat, Member sender, String content) {
+        this.chat = chat;
         this.sender = sender;
         this.content = content;
-        this.timeStamp = LocalDateTime.now();
-        this.isRead = false;
-        this.deletedByRequester = false;
-        this.deletedByTarget = false;
+        this.readStatus = MessageReadStatus.UNREAD;
+        this.sendAt = LocalDateTime.now();
+        this.readAt = null;
     }
+
     public void markAsRead() {
-        this.isRead = true;
-    }
-    public void setDeletedByRequest() {
-        this.deletedByRequester = true;
-    }
-    public void setDeletedByTarget() {
-        this.deletedByTarget = true;
+        this.readStatus = MessageReadStatus.READ;
+        this.readAt = LocalDateTime.now();
     }
 }

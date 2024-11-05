@@ -1,6 +1,5 @@
 package com.jygoh.anytime.domain.member.model;
 
-import com.jygoh.anytime.domain.chat.model.MemberGroupChat;
 import com.jygoh.anytime.domain.follow.model.Follow;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -62,10 +61,7 @@ public class Member {
     private String subjectId;
 
     @ElementCollection
-    private List<Long> chatRoomIds;
-
-    @OneToMany(mappedBy = "member")
-    private List<MemberGroupChat> memberGroupChats;
+    private List<String> interests = new ArrayList<>();
 
     private boolean showNickname;
     private boolean showProfileImage;
@@ -76,8 +72,8 @@ public class Member {
     @Builder(toBuilder = true)
     public Member(String email, String profileId, String password, String nickname, boolean isSignUpComplete,
         boolean isPrivate, int followingCount, List<Follow> followingRelations, int followerCount,
-        List<Follow> followerRelations, String profileImageUrl, int postCount, String providerId, String subjectId, List<Long> chatRoomIds,
-        List<MemberGroupChat> memberGroupChats) {
+        List<Follow> followerRelations, String profileImageUrl, int postCount, String providerId, String subjectId,
+        List<String> interests) {
         this.email = email;
         this.profileId = profileId;
         this.password = password;
@@ -93,21 +89,13 @@ public class Member {
         this.postCount = postCount;
         this.providerId = providerId;
         this.subjectId = subjectId;
-        this.chatRoomIds = chatRoomIds != null ? chatRoomIds : new ArrayList<>();
-        this.memberGroupChats = memberGroupChats != null ? memberGroupChats : new ArrayList<>();
+        this.interests = interests != null ? interests : new ArrayList<>();
         // 기본값 설정
         this.showNickname = true;
         this.showProfileImage = true;
         this.showFollowingCount = true;
         this.showFollowerCount = true;
         this.showPostCount = true;
-    }
-
-    public void updateInfo(String email, String nickname, String providerId, String subjectId) {
-        this.email = email;
-        this.nickname = nickname;
-        this.providerId = providerId;
-        this.subjectId = subjectId;
     }
 
     public void updateProfileId(String profileId) {

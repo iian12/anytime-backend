@@ -42,8 +42,9 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<PostDetailDto> getPostDetail(@PathVariable("postId") String postId) {
-        PostDetailDto postDetail = postService.getPostDetail(postId);
+    public ResponseEntity<PostDetailDto> getPostDetail(@PathVariable("postId") String postId, HttpServletRequest request) {
+        String token = TokenUtils.extractTokenFromRequest(request);
+        PostDetailDto postDetail = postService.getPostDetail(postId, token);
         return ResponseEntity.ok(postDetail);
     }
 

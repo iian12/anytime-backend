@@ -11,7 +11,7 @@ public interface PostService {
 
     Page<PostSummaryDto> getPostList(Pageable pageable);
 
-    PostDetailDto getPostDetail(String postId);
+    PostDetailDto getPostDetail(String postId, String token);
 
     String createPost(PostCreateRequestDto requestDto, String token);
 

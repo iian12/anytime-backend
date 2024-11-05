@@ -7,6 +7,7 @@ import com.jygoh.anytime.domain.follow.repository.FollowRequestRepository;
 import com.jygoh.anytime.domain.member.dto.MemberSummaryDto;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
+import com.jygoh.anytime.global.security.jwt.utils.BlockValidator;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import java.util.List;
 import java.util.Optional;
@@ -22,11 +23,16 @@ public class FollowServiceImpl implements FollowService {
     private final MemberRepository memberService;
     private final FollowRequestRepository followRequestRepository;
     private final FollowRepository followRepository;
+    private final BlockValidator blockValidator;
 
-    public FollowServiceImpl(MemberRepository memberService, FollowRequestRepository followRequestRepository, FollowRepository followRepository) {
+    public FollowServiceImpl(MemberRepository memberService,
+        FollowRequestRepository followRequestRepository, FollowRepository followRepository,
+        BlockValidator blockValidator
+        ) {
         this.memberService = memberService;
         this.followRequestRepository = followRequestRepository;
         this.followRepository = followRepository;
+        this.blockValidator = blockValidator;
     }
 
     @Override
@@ -36,6 +42,8 @@ public class FollowServiceImpl implements FollowService {
 
         Member requester = memberService.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
+
+        blockValidator.validateNotBlocked(requester, targetMember);
 
         if (targetMember.isPrivate()) {
             boolean isFollower = targetMember.getFollowerRelations().stream()
@@ -63,6 +71,8 @@ public class FollowServiceImpl implements FollowService {
 
         Member requester = memberService.findById(TokenUtils.getMemberIdFromToken(requesterToken))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
+
+        blockValidator.validateNotBlocked(requester, targetMember);
 
         if (targetMember.isPrivate()) {
             boolean isFollower = targetMember.getFollowerRelations().stream()
@@ -95,6 +105,8 @@ public class FollowServiceImpl implements FollowService {
         if (requestMember.getId().equals(targetMember.getId())) {
             throw new IllegalArgumentException("You cannot follow yourself");
         }
+
+        blockValidator.validateNotBlocked(requestMember, targetMember);
 
         Optional<Follow> existingFollow = followRepository.findByFollowerAndFollowee(requestMember, targetMember);
 
@@ -152,6 +164,7 @@ public class FollowServiceImpl implements FollowService {
         Member targetMember = memberService.findByProfileId(targetProfileId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
 
+
         if (!followRepository.existsByFollowerAndFollowee(requesterMember, targetMember)) {
             throw new IllegalArgumentException("Follower is not followed");
         }
@@ -167,6 +180,8 @@ public class FollowServiceImpl implements FollowService {
 
         Member requesterMember = memberService.findByProfileId(requestTerProfileId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
+
+        blockValidator.validateNotBlocked(targetMember, requesterMember);
 
         FollowRequest followRequest = followRequestRepository.findByRequesterAndTarget(requesterMember, targetMember)
             .orElseThrow(() -> new IllegalArgumentException("Follow request not found"));
@@ -189,6 +204,8 @@ public class FollowServiceImpl implements FollowService {
 
         Member requesterMember = memberService.findByProfileId(requesterProfileId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Member"));
+
+        blockValidator.validateNotBlocked(targetMember, requesterMember);
 
         FollowRequest followRequest = followRequestRepository.findByRequesterAndTarget(requesterMember,
                 targetMember)

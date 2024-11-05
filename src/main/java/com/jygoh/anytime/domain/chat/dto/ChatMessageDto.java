@@ -12,14 +12,11 @@ public class ChatMessageDto {
     private String id;
     private String content;
     private LocalDateTime timeStamp;
-    private boolean isRead;
-
 
     @Builder
-    public ChatMessageDto(String id, String content, LocalDateTime timeStamp, boolean isRead) {
+    public ChatMessageDto(String id, String content, LocalDateTime timeStamp) {
         this.id = id;
         this.content = content;
         this.timeStamp = timeStamp;
-        this.isRead = isRead;
     }
 }

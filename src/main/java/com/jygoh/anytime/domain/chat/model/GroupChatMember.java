@@ -19,31 +19,30 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MemberChat {
+public class GroupChatMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "member1_id", nullable = false)
-    private Member member1;
+    @JoinColumn(name = "group_chat_id", nullable = false)
+    private GroupChat groupChat;
 
     @ManyToOne
-    @JoinColumn(name = "member2_id", nullable = false)
-    private Member member2;
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
-    @OneToMany(mappedBy = "memberChat", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ChatMessage> messages = new ArrayList<>();
+    @OneToMany(mappedBy = "groupChatMember", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GroupMessageReadStatus> readStatuses = new ArrayList<>();
 
     @Builder
-    public MemberChat(Member member1, Member member2) {
-        this.member1 = member1;
-        this.member2 = member2;
+    public GroupChatMember(GroupChat groupChat, Member member) {
+        this.groupChat = groupChat;
+        this.member = member;
     }
 
-    public void addMessage(ChatMessage message) {
-        messages.add(message);
-        message.setMemberChat(this);
+    public void markMessageAsRead(GroupChatMessage message) {
+        readStatuses.add(new GroupMessageReadStatus(this, message));
     }
 }

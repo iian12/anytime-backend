@@ -2,28 +2,20 @@ package com.jygoh.anytime.domain.chat.service;
 
 import com.jygoh.anytime.domain.chat.dto.ChatMessageDto;
 import com.jygoh.anytime.domain.chat.dto.ChatMessageRequest;
+import com.jygoh.anytime.domain.chat.dto.ChatRoomResponse;
 import com.jygoh.anytime.domain.chat.dto.ChatSessionDto;
+import com.jygoh.anytime.domain.chat.dto.PrivateChatResponse;
 import com.jygoh.anytime.domain.member.model.Member;
 import java.util.List;
 import java.util.Optional;
 
 public interface ChatService {
 
-    ChatSessionDto initiateChat(ChatMessageRequest request, String token);
+    List<ChatRoomResponse> getChatsByMember(String token);
 
-    ChatSessionDto createChatSession(Member requester, Member target, String messageContent);
+    PrivateChatResponse initiatePrivateChat(String targetProfileId, String content, String token);
 
-    ChatSessionDto acceptChatRequest(String chatRequestId, String token);
+    void sendMessage(String chatRoomId, String content, String token);
 
-    void rejectChatRequest(String chatRequestId, String token);
-
-    ChatMessageDto sendMessage(String chatSessionId, String token, String messageContent);
-
-    void markMessageAsRead(String chatMessageId, String token);
-
-    List<ChatSessionDto> getChatSessions(String token);
-
-    void deleteMessage(String messageId, String token);
-
-    List<ChatMessageDto> getMessages(String chatSessionId, String token);
+    void markMessageAsReadForPrivateChat(String messageId, String token);
 }

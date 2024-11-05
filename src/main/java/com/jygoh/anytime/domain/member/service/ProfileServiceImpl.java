@@ -5,6 +5,7 @@ import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.domain.post.dto.PostSummaryDto;
 import com.jygoh.anytime.domain.post.repository.PostRepository;
+import com.jygoh.anytime.global.security.jwt.utils.BlockValidator;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +18,12 @@ public class ProfileServiceImpl implements ProfileService {
 
     private final MemberRepository memberService;
     private final PostRepository postRepository;
+    private final BlockValidator blockValidator;
 
-    public ProfileServiceImpl(MemberRepository memberService, PostRepository postRepository) {
+    public ProfileServiceImpl(MemberRepository memberService, PostRepository postRepository, BlockValidator blockValidator) {
         this.memberService = memberService;
         this.postRepository = postRepository;
+        this.blockValidator = blockValidator;
     }
 
     @Override
@@ -32,6 +35,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         Member requester = memberService.findById(requesterId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
+        blockValidator.validateNotBlocked(requester, member);
 
         ProfileResDto.InfoWrapper<String> nicknameInfo;
         ProfileResDto.InfoWrapper<String> profileImgUrlInfo;
