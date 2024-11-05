@@ -102,6 +102,7 @@ public class ChatServiceImpl implements ChatService {
             .content(content)
             .build();
         privateChatMessageRepository.save(privateChatMessage);
+        newChat.addMessage(privateChatMessage);
         return PrivateChatResponse.builder().chatId(encodeDecode.encode(newChat.getId()))
             .build();
     }
@@ -120,6 +121,7 @@ public class ChatServiceImpl implements ChatService {
             .content(content)
             .build();
         privateChatMessageRepository.save(privateChatMessage);
+        privateChat.addMessage(privateChatMessage);
         return PrivateChatResponse.builder().requestId(encodeDecode.encode(newRequest.getId()))
             .chatId(encodeDecode.encode(privateChat.getId())).status(ChatStatus.PENDING_REQUEST)
             .build();
@@ -139,8 +141,9 @@ public class ChatServiceImpl implements ChatService {
             .sender(sender)
             .content(content)
             .build();
-
         privateChatMessageRepository.save(newMessage);
+
+        chat.addMessage(newMessage);
 
         messagingTemplate.convertAndSend(
             "/api/sub/chatRoom/" + chat.getId(),

@@ -42,10 +42,6 @@ public class ChatRequest {
         this.status = RequestStatus.PENDING; // 기본 상태: 대기 중
     }
 
-    public void accept() {
-        this.status = RequestStatus.ACCEPTED; // 수락 상태로 변경
-    }
-
     public void reject() {
         this.status = RequestStatus.REJECTED; // 거절 상태로 변경
     }
