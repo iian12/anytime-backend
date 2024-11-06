@@ -5,6 +5,7 @@ import com.jygoh.anytime.domain.chat.dto.PrivateChatMessageRes;
 import com.jygoh.anytime.domain.chat.dto.PrivateChatResponse;
 import com.jygoh.anytime.domain.chat.dto.PrivateChatResponse.ChatStatus;
 import com.jygoh.anytime.domain.chat.dto.ReadReceipt;
+import com.jygoh.anytime.domain.chat.model.Chat;
 import com.jygoh.anytime.domain.chat.model.ChatRequest;
 import com.jygoh.anytime.domain.chat.model.GroupChat;
 import com.jygoh.anytime.domain.chat.model.MessageReadStatus;
@@ -17,6 +18,8 @@ import com.jygoh.anytime.domain.chat.repository.PrivateChatRepository;
 import com.jygoh.anytime.domain.follow.repository.FollowRepository;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
+import com.jygoh.anytime.domain.notification.model.ChatNotificationSetting;
+import com.jygoh.anytime.domain.notification.repository.ChatNotificationSettingRepository;
 import com.jygoh.anytime.global.security.jwt.utils.BlockValidator;
 import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import com.jygoh.anytime.global.security.utils.EncodeDecode;
@@ -39,12 +42,14 @@ public class ChatServiceImpl implements ChatService {
     private final EncodeDecode encodeDecode;
     private final PrivateChatMessageRepository privateChatMessageRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatNotificationSettingRepository notificationSettingRepository;
 
     public ChatServiceImpl(MemberRepository memberRepository, FollowRepository followRepository,
         PrivateChatRepository privateChatRepository, ChatRequestRepository chatRequestRepository,
         GroupChatRepository groupChatRepository, BlockValidator blockValidator,
         EncodeDecode encodeDecode, PrivateChatMessageRepository privateChatMessageRepository,
-        SimpMessagingTemplate messagingTemplate) {
+        SimpMessagingTemplate messagingTemplate,
+        ChatNotificationSettingRepository notificationSettingRepository) {
         this.memberRepository = memberRepository;
         this.followRepository = followRepository;
         this.privateChatRepository = privateChatRepository;
@@ -54,16 +59,20 @@ public class ChatServiceImpl implements ChatService {
         this.encodeDecode = encodeDecode;
         this.privateChatMessageRepository = privateChatMessageRepository;
         this.messagingTemplate = messagingTemplate;
+        this.notificationSettingRepository = notificationSettingRepository;
     }
 
     @Override
     public List<ChatRoomResponse> getChatsByMember(String token) {
-        Long memberId = TokenUtils.getMemberIdFromToken(token);
+        Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
+            .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
         List<GroupChat> groupChats = groupChatRepository.findAllByMemberId(
             TokenUtils.getMemberIdFromToken(token));
         List<PrivateChat> privateChats = privateChatRepository.findAllByMemberId(
             TokenUtils.getMemberIdFromToken(token));
-        return ChatRoomResponse.fromChats(groupChats, privateChats, memberId);
+        return
+            ChatRoomResponse
+                .fromChats(groupChats, privateChats, member, notificationSettingRepository);
     }
 
     @Override
@@ -89,21 +98,29 @@ public class ChatServiceImpl implements ChatService {
             return startChatSession(requesterMember, content, targetMember);
         }
         throw new IllegalArgumentException("비공개 계정의 사용자입니다.");
+
+    }
+
+    private void createNotificationSettings(Chat chat, Member member1, Member member2) {
+        ChatNotificationSetting setting1 = ChatNotificationSetting.builder()
+            .member(member1)
+            .chat(chat)
+            .build();
+
+        ChatNotificationSetting setting2 = ChatNotificationSetting.builder()
+            .member(member2)
+            .chat(chat)
+            .build();
+
+        notificationSettingRepository.save(setting1);
+        notificationSettingRepository.save(setting2);
     }
 
     private PrivateChatResponse startChatSession(Member currentMember, String content,
         Member targetMember) {
-        PrivateChat newChat = PrivateChat.builder().member1(currentMember).member2(targetMember)
-            .build();
-        privateChatRepository.save(newChat);
-        PrivateChatMessage privateChatMessage = PrivateChatMessage.builder()
-            .chat(newChat)
-            .sender(currentMember)
-            .content(content)
-            .build();
-        privateChatMessageRepository.save(privateChatMessage);
-        newChat.addMessage(privateChatMessage);
-        return PrivateChatResponse.builder().chatId(encodeDecode.encode(newChat.getId()))
+        PrivateChat privateChat = createPrivateChat(currentMember, targetMember, content);
+
+        return PrivateChatResponse.builder().chatId(encodeDecode.encode(privateChat.getId()))
             .build();
     }
 
@@ -112,19 +129,30 @@ public class ChatServiceImpl implements ChatService {
         ChatRequest newRequest = ChatRequest.builder().requester(currentMember).target(targetMember)
             .build();
         chatRequestRepository.save(newRequest);
-        PrivateChat privateChat = PrivateChat.builder().member1(currentMember).member2(targetMember)
+
+        PrivateChat privateChat = createPrivateChat(currentMember, targetMember, content);
+
+        return PrivateChatResponse.builder().requestId(encodeDecode.encode(newRequest.getId()))
+            .chatId(encodeDecode.encode(privateChat.getId())).status(ChatStatus.PENDING_REQUEST)
+            .build();
+    }
+
+    private PrivateChat createPrivateChat(
+        Member currentMember, Member targetMember, String content) {
+        PrivateChat privateChat = PrivateChat.builder()
+            .member1(currentMember)
+            .member2(targetMember)
             .build();
         privateChatRepository.save(privateChat);
-        PrivateChatMessage privateChatMessage = PrivateChatMessage.builder()
+        PrivateChatMessage message = PrivateChatMessage.builder()
             .chat(privateChat)
             .sender(currentMember)
             .content(content)
             .build();
-        privateChatMessageRepository.save(privateChatMessage);
-        privateChat.addMessage(privateChatMessage);
-        return PrivateChatResponse.builder().requestId(encodeDecode.encode(newRequest.getId()))
-            .chatId(encodeDecode.encode(privateChat.getId())).status(ChatStatus.PENDING_REQUEST)
-            .build();
+        privateChatMessageRepository.save(message);
+        privateChat.addMessage(message);
+        createNotificationSettings(privateChat, currentMember, targetMember);
+        return privateChat;
     }
 
     @Override
@@ -154,7 +182,8 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void markMessageAsReadForPrivateChat(String messageId, String token) {
 
-        PrivateChatMessage message = privateChatMessageRepository.findById(encodeDecode.decode(messageId))
+        PrivateChatMessage message =
+            privateChatMessageRepository.findById(encodeDecode.decode(messageId))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Message"));
 
         if (message.getReadStatus() != MessageReadStatus.READ) {
@@ -177,11 +206,14 @@ public class ChatServiceImpl implements ChatService {
         PrivateChat chat = privateChatRepository.findById(decodedChatRoomId)
             .orElseThrow(() -> new IllegalArgumentException("Invalid Chat Room"));
 
-        if (!chat.getMember1().getId().equals(memberId) && !chat.getMember2().getId().equals(memberId)) {
-            throw new IllegalAccessException("Access Denied: You are not a member of this chat room");
+        if (!chat.getMember1().getId().equals(memberId)
+            && !chat.getMember2().getId().equals(memberId)) {
+            throw new
+                IllegalAccessException("Access Denied: You are not a member of this chat room");
         }
 
-        List<PrivateChatMessage> messages = privateChatMessageRepository.findAllByChatId(decodedChatRoomId);
+        List<PrivateChatMessage> messages =
+            privateChatMessageRepository.findAllByChatId(decodedChatRoomId);
 
         return messages.stream()
             .map(message -> PrivateChatMessageRes.from(message, memberId))

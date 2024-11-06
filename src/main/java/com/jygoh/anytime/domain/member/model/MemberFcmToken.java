@@ -1,5 +1,6 @@
 package com.jygoh.anytime.domain.member.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -8,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -28,23 +30,31 @@ public class MemberFcmToken {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @ElementCollection
-    @CollectionTable(name = "member_fcm_tokens", joinColumns = @JoinColumn(name = "member_fcm_token_id"))
-    private List<String> fcmTokens = new ArrayList<>();
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FcmToken> fcmTokens = new ArrayList<>();
 
     @Builder
-    public MemberFcmToken(Member member, List<String> fcmToken) {
+    public MemberFcmToken(Member member) {
         this.member = member;
-        this.fcmTokens = fcmToken;
     }
 
     public void addToken(String newToken) {
-        if (!this.fcmTokens.contains(newToken)) {
-            this.fcmTokens.add(newToken);
+        boolean tokenExists = fcmTokens
+            .stream()
+            .anyMatch(token -> token.getToken().equals(newToken));
+        if (!tokenExists) {
+            this.fcmTokens.add(new FcmToken(this.member, newToken));
         }
     }
 
     public void removeToken(String tokenToRemove) {
-        this.fcmTokens.remove(tokenToRemove);
+        this.fcmTokens
+            .removeIf(token -> token.getToken().equals(tokenToRemove));
+    }
+
+    public void updateTokenLastUsedAt(String tokenToUpdate) {
+        fcmTokens
+            .stream()
+            .filter(token -> token.getToken().equals(tokenToUpdate));
     }
 }

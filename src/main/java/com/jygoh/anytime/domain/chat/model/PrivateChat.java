@@ -41,4 +41,5 @@ public class PrivateChat extends Chat {
     public void addMessage(PrivateChatMessage privateChatMessage) {
         messages.add(privateChatMessage);
     }
+
 }
