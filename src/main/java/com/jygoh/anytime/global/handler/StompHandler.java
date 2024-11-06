@@ -1,8 +1,6 @@
 package com.jygoh.anytime.global.handler;
 
 import com.jygoh.anytime.global.security.jwt.service.JwtTokenProvider;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;

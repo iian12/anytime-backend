@@ -56,7 +56,7 @@ public class ChatRoomResponse {
         List<ChatRoomResponse> groupChatResponses = groupChats.stream()
             .map(chat -> {
                 // 알림 설정 여부 체크
-                ChatNotificationSetting settings = notificationSettingsRepository.findByMemberAndChat(member, chat)
+                ChatNotificationSetting settings = notificationSettingsRepository.findByMemberAndChatId(member, chat.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid Info"));
                 boolean notificationsEnabled = settings != null && settings.isNotificationsEnabled();
 
@@ -80,7 +80,7 @@ public class ChatRoomResponse {
                     .count();
                 return ChatRoomResponse.builder()
                     .id(encodeDecode.encode(chat.getId()))
-                    .title(chat.getTitle())
+                    .title(String.valueOf(chat.getTitle()))
                     .memberNicknames(chat.getMembers().stream()
                         .map(memberChat -> memberChat.getMember().getNickname())
                         .collect(Collectors.toList()))
@@ -98,7 +98,8 @@ public class ChatRoomResponse {
         List<ChatRoomResponse> privateChatResponses = privateChats.stream()
             .map(chat -> {
                 // 알림 설정 여부 체크
-                ChatNotificationSetting settings = notificationSettingsRepository.findByMemberAndChat(member, chat)
+                ChatNotificationSetting settings = notificationSettingsRepository.findByMemberAndChatId(member,
+                        chat.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid Member or Chat"));
                 boolean notificationsEnabled = settings != null && settings.isNotificationsEnabled();
 

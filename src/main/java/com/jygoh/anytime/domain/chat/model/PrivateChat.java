@@ -2,7 +2,9 @@ package com.jygoh.anytime.domain.chat.model;
 
 import com.jygoh.anytime.domain.member.model.Member;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -15,7 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@DiscriminatorValue("PRIVATE")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PrivateChat extends Chat {
@@ -33,7 +34,6 @@ public class PrivateChat extends Chat {
 
     @Builder
     public PrivateChat(Member member1, Member member2) {
-        super();
         this.member1 = member1;
         this.member2 = member2;
     }

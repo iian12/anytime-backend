@@ -1,6 +1,5 @@
 package com.jygoh.anytime.domain.notification.model;
 
-import com.jygoh.anytime.domain.chat.model.Chat;
 import com.jygoh.anytime.domain.member.model.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,17 +26,15 @@ public class ChatNotificationSetting {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @ManyToOne
-    @JoinColumn(name = "chat_id", nullable = false)
-    private Chat chat;
-
     @Column(nullable = false)
     private boolean notificationsEnabled;
 
+    private Long chatId;
+
     @Builder
-    public ChatNotificationSetting(Member member, Chat chat) {
+    public ChatNotificationSetting(Member member, Long chatId) {
         this.member = member;
-        this.chat = chat;
+        this.chatId = chatId;
         this.notificationsEnabled = true;
     }
 

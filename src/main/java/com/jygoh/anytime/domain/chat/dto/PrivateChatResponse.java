@@ -20,6 +20,7 @@ public class PrivateChatResponse {
     }
 
     public enum ChatStatus {
+        STARTED,
         PENDING_REQUEST,
         ERROR
     }

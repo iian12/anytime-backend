@@ -2,8 +2,7 @@ package com.jygoh.anytime.domain.chat.model;
 
 import com.jygoh.anytime.domain.member.model.Member;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
@@ -16,10 +15,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@DiscriminatorValue("GROUP")
 public class GroupChat extends Chat {
 
-    @Column(nullable = false)
     private String title;
 
     @OneToMany(mappedBy = "groupChat", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -30,7 +27,6 @@ public class GroupChat extends Chat {
 
     @Builder
     public GroupChat(String title) {
-        super();
         this.title = title;
     }
 

@@ -26,8 +26,8 @@ public class PrivateChatMessage {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "chat_id", nullable = false)
-    private PrivateChat chat;
+    @JoinColumn(name = "private_chat_id", nullable = false)
+    private PrivateChat privateChat;
 
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
@@ -43,8 +43,8 @@ public class PrivateChatMessage {
     private LocalDateTime readAt;
 
     @Builder
-    public PrivateChatMessage(PrivateChat chat, Member sender, String content) {
-        this.chat = chat;
+    public PrivateChatMessage(PrivateChat privateChat, Member sender, String content) {
+        this.privateChat = privateChat;
         this.sender = sender;
         this.content = content;
         this.readStatus = MessageReadStatus.UNREAD;

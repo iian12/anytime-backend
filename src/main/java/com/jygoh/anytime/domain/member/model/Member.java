@@ -44,12 +44,12 @@ public class Member {
     private int followingCount;
 
     @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Follow> followingRelations = new ArrayList<>();
+    private List<Follow> followingRelations;
 
     private int followerCount;
 
     @OneToMany(mappedBy = "followee", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Follow> followerRelations = new ArrayList<>();
+    private List<Follow> followerRelations;
 
     private String profileImageUrl;
 
@@ -61,7 +61,10 @@ public class Member {
     private String subjectId;
 
     @ElementCollection
-    private List<String> interests = new ArrayList<>();
+    private List<String> interests;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FcmToken> fcmTokens;
 
     private boolean showNickname;
     private boolean showProfileImage;
@@ -73,7 +76,7 @@ public class Member {
     public Member(String email, String profileId, String password, String nickname, boolean isSignUpComplete,
         boolean isPrivate, int followingCount, List<Follow> followingRelations, int followerCount,
         List<Follow> followerRelations, String profileImageUrl, int postCount, String providerId, String subjectId,
-        List<String> interests) {
+        List<String> interests, List<FcmToken> fcmTokens) {
         this.email = email;
         this.profileId = profileId;
         this.password = password;
@@ -90,6 +93,7 @@ public class Member {
         this.providerId = providerId;
         this.subjectId = subjectId;
         this.interests = interests != null ? interests : new ArrayList<>();
+        this.fcmTokens = fcmTokens != null ? fcmTokens : new ArrayList<>();
         // 기본값 설정
         this.showNickname = true;
         this.showProfileImage = true;
@@ -122,8 +126,8 @@ public class Member {
         this.isSignUpComplete = isSignUpComplete;
     }
 
-    public void updateProviderId(String providerId) {
-        this.providerId = providerId;
+    public void updateSubjectId(String subjectId) {
+        this.subjectId = subjectId;
     }
 
     public void incrementPostCount() {

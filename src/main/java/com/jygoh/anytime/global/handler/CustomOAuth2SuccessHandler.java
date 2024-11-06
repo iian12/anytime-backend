@@ -6,10 +6,12 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
@@ -24,9 +26,9 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         Authentication authentication) throws IOException {
         CustomUserDetail userDetail = (CustomUserDetail) authentication.getPrincipal();
         Long memberId = userDetail.getMemberId();
-
+        log.info(userDetail.getMember().getProfileId());
         // 프로필 ID가 존재하는지 확인
-        if (userDetail.getProfileId() == null) {
+        if (userDetail.getMember().getProfileId() == null) {
             response.sendRedirect("http://localhost:3000/set-profileId");
         } else {
             String accessToken = jwtTokenProvider.createAccessToken(memberId);

@@ -20,12 +20,6 @@ public class CustomUserDetail implements UserDetails, OAuth2User {
         this.memberId = memberId;
     }
 
-    public CustomUserDetail(OAuth2User oAuth2User, Long memberId) {
-        this.member = null;
-        this.oAuth2User = oAuth2User;
-        this.memberId = memberId;
-    }
-
     @Override
     public String getName() {
         return oAuth2User != null ? oAuth2User.getName() : null;

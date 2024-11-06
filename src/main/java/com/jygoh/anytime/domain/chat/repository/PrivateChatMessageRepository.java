@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PrivateChatMessageRepository extends JpaRepository<PrivateChatMessage, Long> {
 
-    List<PrivateChatMessage> findAllByChatId(Long decodedChatRoomId);
+    List<PrivateChatMessage> findAllByPrivateChatId(Long decodedChatRoomId);
 
 }

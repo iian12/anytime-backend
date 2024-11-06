@@ -1,7 +1,5 @@
 package com.jygoh.anytime.domain.notification.service;
 
-import com.jygoh.anytime.domain.chat.model.Chat;
-import com.jygoh.anytime.domain.chat.repository.ChatRepository;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.domain.notification.model.ChatNotificationSetting;
@@ -17,14 +15,12 @@ public class ChatNotificationServiceImpl implements ChatNotificationService {
 
     private final ChatNotificationSettingRepository notificationSettingRepository;
     private final MemberRepository memberRepository;
-    private final ChatRepository chatRepository;
     private final EncodeDecode encodeDecode;
 
     public ChatNotificationServiceImpl(ChatNotificationSettingRepository notificationSettingRepository,
-        MemberRepository memberRepository, ChatRepository chatRepository, EncodeDecode encodeDecode) {
+        MemberRepository memberRepository, EncodeDecode encodeDecode) {
         this.notificationSettingRepository = notificationSettingRepository;
         this.memberRepository = memberRepository;
-        this.chatRepository = chatRepository;
         this.encodeDecode = encodeDecode;
     }
 
@@ -32,12 +28,9 @@ public class ChatNotificationServiceImpl implements ChatNotificationService {
     public boolean toggleChatNotification(String chatId, String token) {
         Member member = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
-        Chat chat = chatRepository.findById(encodeDecode.decode(chatId))
-            .orElseThrow(() -> new IllegalArgumentException("Invalid Chat"));
-
 
         ChatNotificationSetting setting = notificationSettingRepository
-            .findByMemberAndChat(member, chat)
+            .findByMemberAndChatId(member, encodeDecode.decode(chatId))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Setting"));
 
         setting.toggleNotifications();
