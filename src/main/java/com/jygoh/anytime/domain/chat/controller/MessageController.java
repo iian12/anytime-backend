@@ -27,7 +27,7 @@ public class MessageController {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         String token = (String) Objects.requireNonNull(accessor.getSessionAttributes()).get("Authorization");
 
-        chatService.sendMessage(chatSessionId, token, content);
+        chatService.sendMessage(chatSessionId, content, token);
     }
 
     @MessageMapping("/read/private/{chatMessageId}")

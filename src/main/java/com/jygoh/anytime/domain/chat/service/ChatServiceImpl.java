@@ -117,8 +117,8 @@ public class ChatServiceImpl implements ChatService {
 
         // 그룹 채팅에 참여할 사용자들을 찾기
         List<Member> targetMembers = memberRepository.findByProfileIdIn(targetProfileIds);
-        if (targetMembers.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+        if (targetMembers.isEmpty() || targetMembers.size() < 2) {
+            throw new IllegalArgumentException("인원을 2명 이상 선택하세요.");
         }
         if (title == null) {
             throw new IllegalArgumentException("그룹 이름을 지정해주세요.");
@@ -146,6 +146,7 @@ public class ChatServiceImpl implements ChatService {
         // 그룹 채팅 저장
         groupChatRepository.save(groupChat);
 
+        log.info(String.valueOf(groupChat.getId()));
         GroupChatMember requesterGroupChatMember = GroupChatMember.builder()
             .groupChat(groupChat)
             .member(requesterMember)
@@ -213,6 +214,7 @@ public class ChatServiceImpl implements ChatService {
             .build();
         privateChatMessageRepository.save(message);
         privateChat.addMessage(message);
+        log.info(String.valueOf(privateChat.getId()));
         return privateChat;
     }
 

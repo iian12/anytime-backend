@@ -1,45 +1,46 @@
 package com.jygoh.anytime.flow;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jygoh.anytime.domain.chat.controller.MessageController;
 import com.jygoh.anytime.domain.chat.dto.PrivateChatResponse;
 import com.jygoh.anytime.domain.chat.model.GroupChat;
 import com.jygoh.anytime.domain.chat.repository.GroupChatRepository;
+import com.jygoh.anytime.domain.chat.service.ChatService;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.global.security.jwt.service.JwtTokenProvider;
 import com.jygoh.anytime.global.security.utils.EncodeDecode;
-import java.lang.reflect.Type;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.stomp.StompFrameHandler;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.mock.web.MockCookie;
-import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.socket.WebSocketHttpHeaders;
-import org.springframework.web.socket.client.WebSocketClient;
-import org.springframework.web.socket.client.WebSocketConnectionManager;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 public class FollowAndChatTest {
 
@@ -50,14 +51,20 @@ public class FollowAndChatTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    @InjectMocks
+    private MessageController messageController;
+
     @Autowired
     private MockMvc mvc;
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+    private WebSocketStompClient client;
+    private CompletableFuture<String> messageFuture;
 
     private MockCookie userCookie1;
     private MockCookie userCookie2;
+
+    @Mock
+    private ChatService chatService;
 
     @Autowired
     private EncodeDecode encodeDecode;
@@ -68,6 +75,8 @@ public class FollowAndChatTest {
     private String chatId;
     @Autowired
     private GroupChatRepository groupChatRepository;
+
+    String token;
 
     @BeforeEach
     public void setUp() {
@@ -105,6 +114,11 @@ public class FollowAndChatTest {
             jwtTokenProvider.createAccessToken(user1.getId()));
         userCookie2 = new MockCookie("access_token",
             jwtTokenProvider.createAccessToken(user2.getId()));
+        client = new WebSocketStompClient(new StandardWebSocketClient());
+        client.setMessageConverter(new MappingJackson2MessageConverter());
+        messageFuture = new CompletableFuture<>();
+
+        token = userCookie1.getValue();
     }
 
     @Test
@@ -126,9 +140,24 @@ public class FollowAndChatTest {
         ObjectMapper objectMapper = new ObjectMapper();
         PrivateChatResponse responseDto = objectMapper.readValue(responseContent, PrivateChatResponse.class);
         chatId = responseDto.getChatId();
-        GroupChat groupChat = GroupChat.builder()
+        System.out.println(chatId);
+        GroupChat chat = GroupChat.builder()
             .title("title")
             .build();
-        groupChatRepository.save(groupChat);
+
+        groupChatRepository.save(chat);
+        System.out.println(chat.getId());
+
+        String content = "Hello, World";
+        StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.SEND);
+        if (accessor.getSessionAttributes() == null) {
+            accessor.setSessionAttributes(new HashMap<>()); // 세션 속성 초기화
+        }
+        accessor.getSessionAttributes().put("Authorization", "Bearer " + token);
+        Message<?> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+
+        messageController.sendMessage(chatId, content, message);
+
+        verify(chatService, times(1)).sendMessage(chatId, content, "Bearer " + token);
     }
 }
