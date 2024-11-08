@@ -1,5 +1,6 @@
 package com.jygoh.anytime.domain.chat.service;
 
+import com.jygoh.anytime.domain.chat.dto.ChatMessageDto;
 import com.jygoh.anytime.domain.chat.dto.ChatRoomResponse;
 import com.jygoh.anytime.domain.chat.dto.GroupChatResponse;
 import com.jygoh.anytime.domain.chat.dto.PrivateChatMessageRes;
@@ -202,11 +203,17 @@ public class ChatServiceImpl implements ChatService {
 
     private PrivateChat createPrivateChat(
         Member currentMember, Member targetMember, String content) {
-        PrivateChat privateChat = PrivateChat.builder()
-            .member1(currentMember)
-            .member2(targetMember)
-            .build();
-        privateChatRepository.save(privateChat);
+
+        PrivateChat privateChat = privateChatRepository.findByMembers(currentMember.getId(),
+            targetMember.getId()).orElseGet(() -> {
+                PrivateChat newChat = PrivateChat.builder()
+                    .member1(currentMember)
+                    .member2(targetMember)
+                    .build();
+                privateChatRepository.save(newChat);
+                return newChat;
+        });
+
         PrivateChatMessage message = PrivateChatMessage.builder()
             .privateChat(privateChat)
             .sender(currentMember)
@@ -221,6 +228,8 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void sendMessage(String chatRoomId, String content, String token) {
 
+        log.info(chatRoomId);
+        log.info(String.valueOf(encodeDecode.decode(chatRoomId)));
         PrivateChat chat = privateChatRepository.findById(encodeDecode.decode(chatRoomId))
             .orElseThrow(() -> new IllegalArgumentException("Invalid Chat Room"));
 
@@ -236,9 +245,16 @@ public class ChatServiceImpl implements ChatService {
 
         chat.addMessage(newMessage);
 
+        ChatMessageDto chatMessageDto = ChatMessageDto.builder()
+            .id(encodeDecode.encode(newMessage.getId()))
+            .content(content)
+            .senderId(encodeDecode.encode(sender.getId()))
+            .timeStamp(newMessage.getSendAt())
+            .build();
+
         messagingTemplate.convertAndSend(
-            "/api/sub/" + chat.getId(),
-            newMessage
+            "/api/sub/private/" + chatRoomId,
+            chatMessageDto
             );
     }
 

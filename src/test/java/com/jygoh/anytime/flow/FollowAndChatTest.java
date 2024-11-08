@@ -1,5 +1,6 @@
 package com.jygoh.anytime.flow;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -7,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jygoh.anytime.domain.chat.controller.MessageController;
+import com.jygoh.anytime.domain.chat.dto.ChatMessageDto;
 import com.jygoh.anytime.domain.chat.dto.PrivateChatResponse;
 import com.jygoh.anytime.domain.chat.model.GroupChat;
 import com.jygoh.anytime.domain.chat.repository.GroupChatRepository;
@@ -15,8 +17,12 @@ import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
 import com.jygoh.anytime.global.security.jwt.service.JwtTokenProvider;
 import com.jygoh.anytime.global.security.utils.EncodeDecode;
+import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,11 +31,16 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.simp.stomp.StompHeaders;
+import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.mock.web.MockCookie;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -39,7 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 public class FollowAndChatTest {
@@ -149,15 +160,53 @@ public class FollowAndChatTest {
         System.out.println(chat.getId());
 
         String content = "Hello, World";
-        StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.SEND);
-        if (accessor.getSessionAttributes() == null) {
-            accessor.setSessionAttributes(new HashMap<>()); // 세션 속성 초기화
+        BlockingQueue<ChatMessageDto> blockingQueue = new LinkedBlockingQueue<>();
+        StompHeaders headers = new StompHeaders();
+        System.out.println(token);
+        headers.add("Authorization", "Bearer " + token);
+        StompSession session = null;
+        try {
+            session = client
+                .connect("ws://localhost:8080/api/ws", new StompSessionHandlerAdapter() {
+                    @Override
+                    public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+                        System.out.println("Connected to WebSocket server");
+                    }
+
+                    @Override
+                    public void handleTransportError(StompSession session, Throwable exception) {
+                        System.err.println("Transport Error: " + exception.getMessage());
+                    }
+                }, headers)
+                .get(3, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            System.err.println("Error connecting to WebSocket: " + e.getMessage());
         }
-        accessor.getSessionAttributes().put("Authorization", "Bearer " + token);
-        Message<?> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
 
-        messageController.sendMessage(chatId, content, message);
+        assertThat(session).isNotNull();
+        session.subscribe("/api/pub/private/" + chatId, new StompFrameHandler() {
 
-        verify(chatService, times(1)).sendMessage(chatId, content, "Bearer " + token);
+            @Override
+            public Type getPayloadType(StompHeaders headers) {
+                return ChatMessageDto.class;
+            }
+
+            @Override
+            public void handleFrame(StompHeaders headers, Object payload) {
+                blockingQueue.offer((ChatMessageDto) payload);
+            }
+        });
+
+        ChatMessageDto messageDto = ChatMessageDto.builder()
+            .id(chatId)
+            .content(content)
+            .build();
+
+        session.send("/api/sub/private/" + chatId, messageDto);
+        ChatMessageDto receivedMessage = blockingQueue.poll(3, TimeUnit.SECONDS);
+        assertThat(receivedMessage).isNotNull();
+        assertThat(receivedMessage.getContent()).isEqualTo(content);
+        assertThat(receivedMessage.getId()).isEqualTo(chatId);
+
     }
 }

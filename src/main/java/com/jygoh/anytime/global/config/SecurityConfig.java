@@ -13,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -45,6 +46,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                     .requestMatchers("/rss/**").permitAll().requestMatchers("/login/**").permitAll()
                     .anyRequest().authenticated())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .oauth2Login(oauth2 -> oauth2.successHandler(customOAuth2SuccessHandler)
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)))
             .exceptionHandling(configurer -> {

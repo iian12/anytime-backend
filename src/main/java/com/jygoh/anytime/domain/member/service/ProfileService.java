@@ -7,4 +7,5 @@ public interface ProfileService {
     ProfileResDto getProfile(String profileId, String token);
 
     String getMyProfileImgUrl(String token);
+
 }
