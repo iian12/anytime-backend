@@ -11,6 +11,8 @@ public interface MemberService {
 
     TokenResponseDto processingGoogleUser(GoogleUserDto dto);
 
+    String getProfileId(String token);
+
     TokenResponseDto setProfileId(SetProfileIdDto setProfileIdDto);
 
 }

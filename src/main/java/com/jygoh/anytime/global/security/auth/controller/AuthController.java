@@ -10,10 +10,13 @@ import com.jygoh.anytime.domain.member.dto.GoogleUserDto;
 import com.jygoh.anytime.domain.member.dto.LoginReqDto;
 import com.jygoh.anytime.domain.member.dto.SetProfileIdDto;
 import com.jygoh.anytime.domain.member.dto.RegisterReqDto;
+import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.service.MemberService;
 import com.jygoh.anytime.global.security.auth.service.AuthService;
 import com.jygoh.anytime.global.security.auth.dto.IdTokenDto;
 import com.jygoh.anytime.global.security.jwt.dto.TokenResponseDto;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -23,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -98,6 +102,7 @@ public class AuthController {
                 if (tokenResponseDto.getAccessToken() != null && tokenResponseDto.getRefreshToken() != null) {
                     response.setHeader("Authorization", "Bearer " + tokenResponseDto.getAccessToken());
                     response.setHeader("Refresh-Token", "Bearer " + tokenResponseDto.getRefreshToken());
+                    response.setHeader("Profile-Id", memberService.getProfileId(tokenResponseDto.getAccessToken()));
                     return ResponseEntity.ok().build();
                 } else {
                     return ResponseEntity.status(HttpStatus.PRECONDITION_REQUIRED) // HTTP 428
@@ -119,11 +124,19 @@ public class AuthController {
             TokenResponseDto tokenResponseDto = memberService.setProfileId(setProfileIdDto);
             response.setHeader("Authorization", "Bearer" + tokenResponseDto.getAccessToken());
             response.setHeader("Refresh-Token", "Bearer" + tokenResponseDto.getRefreshToken());
+            response.setHeader("Profile-Id", memberService.getProfileId(tokenResponseDto.getAccessToken()));
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
+    }
+
+    @GetMapping("/profile-id")
+    public ResponseEntity<String> getProfileId(HttpServletRequest request) {
+        String profileId = memberService.getProfileId(TokenUtils.extractTokenFromRequest(request));
+
+        return ResponseEntity.ok().body(profileId);
     }
 }

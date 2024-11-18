@@ -36,9 +36,11 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
             Cookie accessTokenCookie = createCookie("access_token", accessToken);
             Cookie refreshTokenCookie = createCookie("refresh_token", refreshToken);
+            Cookie profileId = createCookie("profile_id", userDetail.getMember().getProfileId());
 
             response.addCookie(accessTokenCookie);
             response.addCookie(refreshTokenCookie);
+            response.addCookie(profileId);
             response.sendRedirect("http://localhost:3000/login/callback");
         }
     }

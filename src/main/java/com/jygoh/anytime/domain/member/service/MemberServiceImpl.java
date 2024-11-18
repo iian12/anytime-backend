@@ -5,6 +5,7 @@ import com.jygoh.anytime.domain.member.dto.SetProfileIdDto;
 import com.jygoh.anytime.domain.member.dto.RegisterReqDto;
 import com.jygoh.anytime.domain.member.model.Member;
 import com.jygoh.anytime.domain.member.repository.MemberRepository;
+import com.jygoh.anytime.global.security.jwt.utils.TokenUtils;
 import com.jygoh.anytime.global.security.utils.EncryptionUtils;
 import com.jygoh.anytime.global.security.jwt.service.JwtTokenProvider;
 import com.jygoh.anytime.global.security.jwt.dto.TokenResponseDto;
@@ -96,6 +97,14 @@ public class MemberServiceImpl implements MemberService {
         }
 
         return tokenResponseDto;
+    }
+
+    @Override
+    public String getProfileId(String token) {
+        Member member = memberService.findById(TokenUtils.getMemberIdFromToken(token))
+            .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
+
+        return member.getProfileId();
     }
 
     @Override
