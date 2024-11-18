@@ -21,13 +21,14 @@ public class MessageController {
         this.chatService = chatService;
     }
 
+    // app/private/{id}
     @MessageMapping("/private/{chatSessionId}")
     public void sendMessage(@DestinationVariable("chatSessionId") String chatSessionId,
         @Payload String content, Message<?> message) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         String token = (String) Objects.requireNonNull(accessor.getSessionAttributes()).get("Authorization");
 
-        chatService.sendMessage(chatSessionId, token, content);
+        chatService.sendMessage(chatSessionId, content, token);
     }
 
     @MessageMapping("/read/private/{chatMessageId}")

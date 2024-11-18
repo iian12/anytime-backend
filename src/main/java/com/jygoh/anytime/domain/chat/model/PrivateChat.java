@@ -42,4 +42,14 @@ public class PrivateChat extends Chat {
         messages.add(privateChatMessage);
     }
 
+    public Member getOtherParticipant(Member sender) {
+        if (member1.equals(sender)) {
+            return member2; // sender가 member1이면 member2 반환
+        } else if (member2.equals(sender)) {
+            return member1; // sender가 member2이면 member1 반환
+        } else {
+            throw new IllegalArgumentException("Sender is not part of this chat");
+        }
+    }
+
 }

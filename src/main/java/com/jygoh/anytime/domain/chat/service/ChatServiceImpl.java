@@ -1,5 +1,6 @@
 package com.jygoh.anytime.domain.chat.service;
 
+import com.jygoh.anytime.domain.chat.dto.ChatMessageDto;
 import com.jygoh.anytime.domain.chat.dto.ChatRoomResponse;
 import com.jygoh.anytime.domain.chat.dto.GroupChatResponse;
 import com.jygoh.anytime.domain.chat.dto.PrivateChatMessageRes;
@@ -225,6 +226,8 @@ public class ChatServiceImpl implements ChatService {
         Member sender = memberRepository.findById(TokenUtils.getMemberIdFromToken(token))
             .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
 
+        Member receiver = chat.getOtherParticipant(sender);
+
         PrivateChatMessage newMessage = PrivateChatMessage.builder()
             .privateChat(chat)
             .sender(sender)
@@ -233,11 +236,14 @@ public class ChatServiceImpl implements ChatService {
         privateChatMessageRepository.save(newMessage);
 
         chat.addMessage(newMessage);
+        ChatMessageDto messageDto = ChatMessageDto.builder()
+            .id(encodeDecode.encode(newMessage.getId()))
+            .content(content)
+            .senderProfileId(sender.getProfileId())
+            .timeStamp(newMessage.getSendAt())
+            .build();
 
-        messagingTemplate.convertAndSend(
-            "/api/sub/" + chat.getId(),
-            newMessage
-            );
+        messagingTemplate.convertAndSendToUser(receiver.getId().toString(), "/queue/messages", messageDto);
     }
 
     @Override
