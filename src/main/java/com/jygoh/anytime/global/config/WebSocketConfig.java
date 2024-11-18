@@ -15,6 +15,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompHandler stompHandler;
+    private WebSocketHandshakeInterceptor webSocketHandshakeInterceptor;
 
     public WebSocketConfig(StompHandler stompHandler) {
         this.stompHandler = stompHandler;
@@ -23,7 +24,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-            .setAllowedOrigins("*");
+            .setAllowedOrigins("*")
+        .withSockJS()
+            .setInterceptors(webSocketHandshakeInterceptor);
     }
 
     @Override
