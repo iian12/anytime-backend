@@ -22,14 +22,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/api/ws")
+        registry.addEndpoint("/ws")
             .setAllowedOrigins("*");
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/api/pub");
-        registry.enableSimpleBroker("/api/sub");
+        registry.setApplicationDestinationPrefixes("/app");
+        registry.enableSimpleBroker("/queue", "/topic");
     }
 
     @Override
